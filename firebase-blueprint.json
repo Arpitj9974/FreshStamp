@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "An inventory item tracked for expiry.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "brand": { "type": "string" },
+        "category": { "type": "string" },
+        "expiryDate": { "type": "string" },
+        "quantity": { "type": "number" },
+        "initialQuantity": { "type": "number" },
+        "usedCount": { "type": "number" },
+        "price": { "type": "number" },
+        "notes": { "type": "string" },
+        "isWasted": { "type": "boolean" },
+        "wastedDate": { "type": "string" },
+        "isUsed": { "type": "boolean" },
+        "usedDate": { "type": "string" }
+      },
+      "required": ["id", "name", "category", "expiryDate", "quantity"]
+    },
+    "WastedItem": {
+      "title": "WastedItem",
+      "description": "An item that was wasted or discarded.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "brand": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "wastedDate": { "type": "string" }
+      },
+      "required": ["id", "name", "category", "price", "wastedDate"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "Settings for the user.",
+      "type": "object",
+      "properties": {
+        "geminiApiKey": { "type": "string" },
+        "defaultReminderDays": { "type": "number" },
+        "notificationsEnabled": { "type": "boolean" },
+        "username": { "type": "string" },
+        "userEmail": { "type": "string" }
+      },
+      "required": ["username", "userEmail"]
+    },
+    "CustomCategory": {
+      "title": "CustomCategory",
+      "description": "A custom category created by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/products/{productId}": {
+      "schema": "Product",
+      "description": "Active inventory items tracked by a specific user."
+    },
+    "/users/{userId}/wastedHistory/{wastedId}": {
+      "schema": "WastedItem",
+      "description": "Wasted items history log for a specific user."
+    },
+    "/users/{userId}/settings/current": {
+      "schema": "UserSettings",
+      "description": "The current configuration of a specific user."
+    },
+    "/users/{userId}/categories/{categoryId}": {
+      "schema": "CustomCategory",
+      "description": "Custom categories created by a specific user."
+    }
+  }
+}

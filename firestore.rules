@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.category is string && data.category.size() > 0 && data.category.size() <= 100
+        && data.expiryDate is string;
+    }
+
+    function isValidWastedItem(data) {
+      return data.name is string && data.name.size() > 0
+        && data.category is string
+        && data.wastedDate is string;
+    }
+
+    function isValidUserSettings(data) {
+      return data.username is string && data.username.size() > 0
+        && data.userEmail is string;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+
+      match /products/{productId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(productId) && isValidProduct(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /wastedHistory/{wastedId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(wastedId) && isValidWastedItem(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /settings/current {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidUserSettings(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /categories/{categoryId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(categoryId) && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100;
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "FreshStamp",
+  "description": "Smart expiry tracker for groceries, medicines, and cosmetics with bento layout, insights and Gemini-powered expiry date extraction.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
