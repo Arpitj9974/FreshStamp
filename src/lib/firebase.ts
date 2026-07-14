@@ -25,17 +25,16 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-// Configuration from firebase-applet-config.json
+// Configuration from Firebase Console
 const firebaseConfig = {
-  apiKey: "AIzaSyDQdcrUKOiz_jkQQBJ3SjMlm2JWpp8haNk",
-  authDomain: "climbing-volt-5jcsn.firebaseapp.com",
-  projectId: "climbing-volt-5jcsn",
-  storageBucket: "climbing-volt-5jcsn.firebasestorage.app",
-  messagingSenderId: "1022300779007",
-  appId: "1:1022300779007:web:ab1d1ae5b269b43f4337ca"
+  apiKey: "AIzaSyDGm7GQfXHWi3keZcqAqqVe4Y7GaAEcoiY",
+  authDomain: "freshstamp-app.firebaseapp.com",
+  projectId: "freshstamp-app",
+  storageBucket: "freshstamp-app.firebasestorage.app",
+  messagingSenderId: "1046466329129",
+  appId: "1:1046466329129:web:8c09f744a58dcd516a7a38",
+  measurementId: "G-T67V6XV22J"
 };
-
-const databaseId = "ai-studio-freshstamp-e0b01f86-5c5c-480d-86de-1fd6772137c4";
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
@@ -45,8 +44,8 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
-// Initialize firestore with the custom databaseId
-export const db = initializeFirestore(app, {}, databaseId);
+// Initialize default firestore database
+export const db = initializeFirestore(app, {});
 
 // Connection test helper as mandated by firebase-integration skill
 export async function testFirestoreConnection(): Promise<boolean> {
