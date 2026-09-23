@@ -34,7 +34,8 @@ import {
   Image as ImageIcon,
   ImagePlus,
   Edit2,
-  RefreshCw
+  RefreshCw,
+  Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, AppSettings, Category } from './types';
@@ -198,6 +199,35 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showBrandDrawer, setShowBrandDrawer] = useState(false);
+
+  // PWA Installation State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        showToast('FreshStamp installed successfully!', 'success');
+      }
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+    } else {
+      showToast('To install: Tap your browser share/menu icon and select "Add to Home Screen" or "Install App".', 'info');
+    }
+  };
 
   // Firebase Auth State
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -2284,6 +2314,29 @@ export default function App() {
                       {settings.defaultReminderDays} DAYS
                     </button>
                   </div>
+                </div>
+              </section>
+
+              {/* Install App (PWA) Section */}
+              <section className="bg-white rounded-xl p-5 shadow-ambient border border-[#eae8e5] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-[#eae8e5] bg-[#f0eeea] shrink-0 p-1">
+                      <img src="/icons/logo.png" alt="FreshStamp App Icon" className="w-full h-full object-contain" />
+                    </div>
+                    <div>
+                      <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Install FreshStamp App</h3>
+                      <p className="text-[11px] text-[#546250]">Get full offline access, home screen shortcut, and instant loading.</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleInstallPWA}
+                    className="px-4 py-2.5 bg-[#22301f] text-white hover:bg-opacity-90 rounded-lg text-xs font-bold transition-all shadow flex items-center gap-2 cursor-pointer shrink-0"
+                  >
+                    <Smartphone size={14} />
+                    {isInstallable ? 'Install App' : 'App Ready'}
+                  </button>
                 </div>
               </section>
 
