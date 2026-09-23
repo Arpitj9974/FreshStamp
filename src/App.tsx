@@ -1353,8 +1353,8 @@ export default function App() {
                     </button>
                   </div>
                 ) : (
-                  /* Filled state responsive list grid */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  /* Filled state responsive list grid with adaptive card sizing */
+                  <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4">
                     {filteredProducts.map((p) => {
                       const prox = getProximityInfo(p.expiryDate);
                       const productImg = p.imageUrl || DEFAULT_PRODUCT_IMAGE;
