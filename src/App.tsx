@@ -330,28 +330,36 @@ export default function App() {
       setSettings(userSettings);
       localStorage.setItem(`freshstamp_settings_${uid}`, JSON.stringify(userSettings));
 
-      // 2. Fetch products
+      // 2. Fetch products (Smart union merge to prevent local products from ever being overwritten)
       const productsRef = collection(db, 'users', uid, 'products');
       const productsSnap = await getDocs(productsRef);
-      let userProducts: Product[] = [];
       
+      const cacheProductsStr = localStorage.getItem(`freshstamp_products_${uid}`);
+      let localProducts: Product[] = [];
+      if (cacheProductsStr) {
+        try {
+          localProducts = JSON.parse(cacheProductsStr) as Product[];
+        } catch (e) {}
+      }
+
+      const productMap = new Map<string, Product>();
       if (!productsSnap.empty) {
         productsSnap.forEach(docSnap => {
-          userProducts.push(docSnap.data() as Product);
+          const p = docSnap.data() as Product;
+          productMap.set(p.id, p);
         });
-      } else {
-        // Check user-specific local cache first
-        const cacheProductsStr = localStorage.getItem(`freshstamp_products_${uid}`);
-        if (cacheProductsStr) {
-          userProducts = JSON.parse(cacheProductsStr) as Product[];
-          for (const prod of userProducts) {
-            await setDoc(doc(db, 'users', uid, 'products', prod.id), prod);
-          }
-        } else {
-          // A brand new Google Account starts with a completely empty inventory!
-          userProducts = [];
-        }
       }
+
+      // Preserve any locally added products that weren't in the cloud snapshot yet and sync them
+      localProducts.forEach(localProd => {
+        if (!productMap.has(localProd.id)) {
+          productMap.set(localProd.id, localProd);
+          setDoc(doc(db, 'users', uid, 'products', localProd.id), localProd)
+            .catch(err => console.warn('Background sync local product error:', err));
+        }
+      });
+
+      const userProducts = Array.from(productMap.values());
       setProducts(userProducts);
       localStorage.setItem(`freshstamp_products_${uid}`, JSON.stringify(userProducts));
 
@@ -439,10 +447,24 @@ export default function App() {
   // Save changes to localStorage when updated (and cloud if logged in)
   const saveProducts = (updatedProducts: Product[]) => {
     setProducts(updatedProducts);
-    if (auth.currentUser) {
-      localStorage.setItem(`freshstamp_products_${auth.currentUser.uid}`, JSON.stringify(updatedProducts));
-    } else {
-      localStorage.setItem('freshstamp_products', JSON.stringify(updatedProducts));
+    const key = auth.currentUser ? `freshstamp_products_${auth.currentUser.uid}` : 'freshstamp_products';
+    try {
+      localStorage.setItem(key, JSON.stringify(updatedProducts));
+    } catch (err: any) {
+      console.warn('LocalStorage quota warning in saveProducts:', err);
+      try {
+        // Fallback: strip heavy images on older items to preserve item records
+        const leanProducts = updatedProducts.map((p, idx) => {
+          if (idx > 5 && p.imageUrl && p.imageUrl.startsWith('data:image/')) {
+            return { ...p, imageUrl: undefined };
+          }
+          return p;
+        });
+        localStorage.setItem(key, JSON.stringify(leanProducts));
+      } catch (innerErr) {
+        console.error('Critical storage error in saveProducts:', innerErr);
+        showToast('Storage quota reached. Consider removing old items.', 'error');
+      }
     }
   };
 
@@ -760,24 +782,60 @@ export default function App() {
     }
   };
 
-  const handleProductImageUpload = (file: File, isEdit: boolean = false) => {
+  const compressImage = (file: File, maxDim = 800, quality = 0.78): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleProductImageUpload = async (file: File, isEdit: boolean = false) => {
     if (!file.type.startsWith('image/')) {
       showToast('Please select a valid image file (PNG, JPG, WebP).', 'error');
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        const resultUrl = reader.result;
-        if (isEdit) {
-          setEditFormData(prev => ({ ...prev, imageUrl: resultUrl }));
-        } else {
-          setFormData(prev => ({ ...prev, imageUrl: resultUrl }));
-        }
-        showToast('Image uploaded successfully!', 'success');
+    try {
+      showToast('Optimizing photo for storage...', 'info');
+      const compressedUrl = await compressImage(file, 800, 0.78);
+      if (isEdit) {
+        setEditFormData(prev => ({ ...prev, imageUrl: compressedUrl }));
+      } else {
+        setFormData(prev => ({ ...prev, imageUrl: compressedUrl }));
       }
-    };
-    reader.readAsDataURL(file);
+      showToast('Photo optimized & attached!', 'success');
+    } catch (err) {
+      console.error('Image compression failed:', err);
+      showToast('Failed to process image. Please try another.', 'error');
+    }
   };
 
   const handleStartEditProduct = (p: Product) => {
@@ -885,6 +943,9 @@ export default function App() {
       notes: '',
       imageUrl: ''
     });
+    // Ensure newly added product is never masked by active filter or search
+    setCategoryFilter('All');
+    setSearchQuery('');
     setActiveTab('home');
   };
 
