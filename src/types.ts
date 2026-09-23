@@ -17,6 +17,7 @@ export interface Product {
   usedCount: number; // to track how many were used
   price: number; // in Rupees
   notes?: string;
+  imageUrl?: string; // Custom uploaded PNG/JPEG (base64 or URL)
   isWasted?: boolean; // if it was marked as wasted / discarded
   wastedDate?: string; // YYYY-MM-DD if wasted
   isUsed?: boolean; // if it was fully consumed

@@ -29,7 +29,12 @@ import {
   EyeOff,
   Download,
   Upload,
-  UserCheck
+  UserCheck,
+  X,
+  Image as ImageIcon,
+  ImagePlus,
+  Edit2,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, AppSettings, Category } from './types';
@@ -50,6 +55,9 @@ import {
   getDoc 
 } from 'firebase/firestore';
 
+// Default Product Image provided in custom icon (served from /icons/default-product.png)
+export const DEFAULT_PRODUCT_IMAGE = '/icons/default-product.png';
+
 // Helper for category stock images matching the mockup HTML URLs
 const CATEGORY_IMAGES: Record<string, string> = {
   'Amul Butter': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBiJAsAjvwWLyXZgoca3nHUHUD81fsGEnCpLCMLvNGQzmsqWTjywTasy5WYeFQ9gFocFak5cQSgESXEyvxTZMCt48QbSO8A3rGsdCcUCopaIVpU2rPKFE1iNTn1K2hGJlJ80jX06W-yE9vJAogUxHkSV_ZjentwxvU9zz9oDKSZ5TCd67-FEoFweIHURvBRr7qQdWhd9w6QTOyjOrT9GxX7oro2SsI_mHZ3BCig9kab0FDCrp6BY-49CJHzG3hxhYvF7BcYwaQfILE',
@@ -57,15 +65,15 @@ const CATEGORY_IMAGES: Record<string, string> = {
   'Sunscreen SPF 50': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEThDqDsg5qMKOMvyQAvg-khrKIT2RpDO3vDAYOX-IOqov72YxV7reSNVMWoZCE9KrjPeebF5gNxBNHVfdmTIxvfII567IOt6WzbYQlk6yq_NPEJSwUHRvWPI1k2D2IBTH4E69k3VtNe21634LqLGxHUe2xkdx6tDXP6hM93zYFoYgRqFkFu0mdnb5tWdNfNOj6BbCqQhCKMdVfLqIKAtat6eHJ8MIeRUJmdoN5QdV04YAmT9FogIoc95-bh-C0djn1U8VV0DEg4o',
   'Expired Milk': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDGIPRYAl4gHvczxtHmjErp6wEzdN-XW_aHD0jOqVz1EwwOz_ZTbsaQ1X4jAaAqCM2jEj97dNxxlYlivYjKqqA4IFocB1ZrsihS5RPJ8xQ9dJrSXwUNZyiavsbHkjTwjzG27zwvTyMPA-Zho2MkmQXxJ9GoROiSV7YJSAC2ArhojmbbtQ900mWTygzrlRwLD_FQc2WcHH5GCv0-nM973aKbcEFQW-qjbKqtuLuXChuLMX84EFhe9F1KE6u9GqpKkBN-cQZAbE1-EiA',
   'Amul Gold Milk': 'https://lh3.googleusercontent.com/aida-public/AB6AXuCkhX10M8Wb3OzYsnng77pRhNlgrJW7gF1uhEnzelW9QdZqSj2qcMQ7jqrwCKF3Fx6B60rziUsX7HbUfuXGdZIi1-nrany7EZKtJKLtKhSFlCq0d0r38d3yEUf5sKAKwxTID-46QlcqpSYRxHmGexuDosU5j6MaTvfPspjqpm9vxWIhtseO5GNbU7XyOmB5vVf5zEXaUN11ryEfYbaqKKOo0GqzzniFVbcvdxcv38aW0W5rrezmSpTUNZ6MdvXtoiej7X4fJwgNLQ4',
-  'Placeholder': 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=200'
+  'Placeholder': DEFAULT_PRODUCT_IMAGE
 };
 
 const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  'Grocery': 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=200',
-  'Medicine': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=200',
-  'Cosmetics': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=200',
-  'Household': 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&q=80&w=200',
-  'Other': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=200'
+  'Grocery': DEFAULT_PRODUCT_IMAGE,
+  'Medicine': DEFAULT_PRODUCT_IMAGE,
+  'Cosmetics': DEFAULT_PRODUCT_IMAGE,
+  'Household': DEFAULT_PRODUCT_IMAGE,
+  'Other': DEFAULT_PRODUCT_IMAGE
 };
 
 const MOCK_PACKAGING_PHOTOS = [
@@ -153,7 +161,22 @@ export default function App() {
     mfdDate: '',
     quantity: 1,
     price: '',
-    notes: ''
+    notes: '',
+    imageUrl: ''
+  });
+
+  // Edit Product Modal State
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    brand: '',
+    category: 'Grocery' as Category,
+    expiryDate: '',
+    mfdDate: '',
+    quantity: 1,
+    price: '',
+    notes: '',
+    imageUrl: ''
   });
 
   // Settings
@@ -174,6 +197,7 @@ export default function App() {
   const [testingApiKey, setTestingApiKey] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showBrandDrawer, setShowBrandDrawer] = useState(false);
 
   // Firebase Auth State
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -612,6 +636,84 @@ export default function App() {
     }
   };
 
+  const handleProductImageUpload = (file: File, isEdit: boolean = false) => {
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (PNG, JPG, WebP).', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        const resultUrl = reader.result;
+        if (isEdit) {
+          setEditFormData(prev => ({ ...prev, imageUrl: resultUrl }));
+        } else {
+          setFormData(prev => ({ ...prev, imageUrl: resultUrl }));
+        }
+        showToast('Image uploaded successfully!', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleStartEditProduct = (p: Product) => {
+    setEditingProduct(p);
+    setEditFormData({
+      name: p.name,
+      brand: p.brand || '',
+      category: p.category,
+      expiryDate: p.expiryDate,
+      mfdDate: p.mfdDate || '',
+      quantity: p.quantity,
+      price: p.price ? p.price.toString() : '',
+      notes: p.notes || '',
+      imageUrl: p.imageUrl || ''
+    });
+  };
+
+  const handleSaveEditedProduct = () => {
+    if (!editingProduct) return;
+    if (!editFormData.name) {
+      showToast('Product name is required!', 'error');
+      return;
+    }
+    if (!editFormData.expiryDate) {
+      showToast('Expiry date is required!', 'error');
+      return;
+    }
+
+    const updatedList = products.map(p => {
+      if (p.id === editingProduct.id) {
+        return {
+          ...p,
+          name: editFormData.name,
+          brand: editFormData.brand || undefined,
+          category: editFormData.category,
+          expiryDate: editFormData.expiryDate,
+          mfdDate: editFormData.mfdDate || undefined,
+          quantity: editFormData.quantity,
+          price: editFormData.price ? parseFloat(editFormData.price) : 0,
+          notes: editFormData.notes || undefined,
+          imageUrl: editFormData.imageUrl?.trim() || undefined
+        };
+      }
+      return p;
+    });
+
+    saveProducts(updatedList);
+    showToast(`Updated ${editFormData.name}!`, 'success');
+
+    if (auth.currentUser) {
+      const updatedItem = updatedList.find(p => p.id === editingProduct.id);
+      if (updatedItem) {
+        setDoc(doc(db, 'users', auth.currentUser.uid, 'products', updatedItem.id), updatedItem)
+          .catch(err => console.error("Cloud update product error:", err));
+      }
+    }
+
+    setEditingProduct(null);
+  };
+
   const handleManualAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name) {
@@ -634,7 +736,8 @@ export default function App() {
       initialQuantity: formData.quantity,
       usedCount: 0,
       price: formData.price ? parseFloat(formData.price) : 0,
-      notes: formData.notes || undefined
+      notes: formData.notes || undefined,
+      imageUrl: formData.imageUrl?.trim() || undefined
     };
 
     saveProducts([newProduct, ...products]);
@@ -655,13 +758,14 @@ export default function App() {
       mfdDate: '',
       quantity: 1,
       price: '',
-      notes: ''
+      notes: '',
+      imageUrl: ''
     });
     setActiveTab('home');
   };
 
   // OCR Scanner handlers
-  const triggerOcrScan = async (mockData?: any, imageFileBase64?: string) => {
+  const triggerOcrScan = async (mockData?: any, imageFileBase64?: string, mockImage?: string) => {
     setOcrLoading(true);
     setOcrError(null);
     setOcrResult(null);
@@ -670,7 +774,10 @@ export default function App() {
     if (mockData) {
       // Realistic loading latency for awesome UX
       setTimeout(() => {
-        setOcrResult(mockData);
+        setOcrResult({
+          ...mockData,
+          imageUrl: mockImage || mockData.image || ''
+        });
         setOcrLoading(false);
       }, 1500);
       return;
@@ -702,7 +809,8 @@ export default function App() {
           expiryDate: data.expiryDate || '',
           quantity: data.quantity || 1,
           price: data.price || 0,
-          notes: data.notes || ''
+          notes: data.notes || '',
+          imageUrl: imageFileBase64
         });
       } catch (err: any) {
         console.error(err);
@@ -723,7 +831,8 @@ export default function App() {
         mfdDate: ocrResult.mfdDate || '',
         quantity: ocrResult.quantity || 1,
         price: ocrResult.price ? ocrResult.price.toString() : '',
-        notes: ocrResult.notes || ''
+        notes: ocrResult.notes || '',
+        imageUrl: ocrResult.imageUrl || formData.imageUrl || ''
       });
       showToast('Form prefilled with scanned packaging data!', 'success');
     }
@@ -996,18 +1105,29 @@ export default function App() {
       <header className="sticky top-0 w-full z-40 bg-white border-b border-[#eae8e5] px-5 py-4 flex justify-between items-center h-16">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => {
-              // Hamburger quick reset shortcut
-              showToast("Shortcut: App Reset & Backup are available in the Settings tab!", "info");
-            }}
-            className="hover:opacity-80 transition-opacity active:scale-95 duration-150"
+            onClick={() => setShowBrandDrawer(true)}
+            className="hover:opacity-80 transition-opacity active:scale-95 duration-150 p-1 -ml-1 rounded-lg hover:bg-[#f5f3f0]"
             id="menu-btn"
+            title="Open Brand Menu & Shortcuts"
           >
-            <Menu className="text-[#0e1b0c]" size={24} />
+            <Menu className="text-[#0e1b0c]" size={22} />
           </button>
-          <div>
-            <h1 className="font-space text-xl font-bold text-[#0e1b0c] leading-none">FreshStamp</h1>
-            <p className="font-mono text-[10px] text-[#444841] tracking-wider mt-[2px]">{getFormattedDate()}</p>
+          <div 
+            onClick={() => setActiveTab('home')}
+            className="flex items-center gap-2.5 cursor-pointer group select-none"
+            title="FreshStamp Home"
+          >
+            <div className="w-8 h-8 rounded-xl overflow-hidden border border-[#c4c8bf]/70 shadow-xs flex-shrink-0 group-hover:scale-105 transition-transform duration-150 bg-white p-0.5 flex items-center justify-center">
+              <img 
+                src="/icons/logo.png" 
+                alt="FreshStamp Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div>
+              <h1 className="font-space text-lg font-bold text-[#0e1b0c] leading-none tracking-tight group-hover:text-emerald-800 transition-colors">FreshStamp</h1>
+              <p className="font-mono text-[10px] text-[#444841] tracking-wider mt-[2px]">{getFormattedDate()}</p>
+            </div>
           </div>
         </div>
         <div 
@@ -1152,10 +1272,12 @@ export default function App() {
                   /* Empty state */
                   <div className="bg-white rounded-2xl p-8 flex flex-col items-center justify-center text-center shadow-ambient border border-[#eae8e5] space-y-6 mt-4">
                     <div className="relative flex justify-center py-6">
-                      <div className="absolute inset-0 bg-[#d8e7d0] opacity-20 rounded-full blur-2xl animate-pulse"></div>
+                      <div className="absolute inset-0 bg-[#d8e7d0] opacity-30 rounded-full blur-2xl animate-pulse"></div>
                       <div className="relative z-10 flex flex-col items-center">
-                        <span className="expiry-stamp text-[#747871] border-[#747871] mb-6 scale-110">EMPTY_SHELF</span>
-                        <ShoppingBasket size={64} className="text-[#c4c8bf]" />
+                        <span className="expiry-stamp text-[#747871] border-[#747871] mb-4 scale-110">EMPTY_SHELF</span>
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-[#c4c8bf]/80 bg-white p-2 shadow-xs flex items-center justify-center">
+                          <img src="/icons/logo.png" alt="FreshStamp Icon" className="w-full h-full object-contain" />
+                        </div>
                       </div>
                       <div className="absolute top-0 right-[-10px] transform rotate-12 opacity-80">
                         <span className="expiry-stamp text-amber-700 border-amber-700 text-[9px] px-2 py-0.5 bg-amber-50">BOGO_READY</span>
@@ -1181,7 +1303,7 @@ export default function App() {
                   /* Filled state list grid */
                   filteredProducts.map((p) => {
                     const prox = getProximityInfo(p.expiryDate);
-                    const stockImg = CATEGORY_IMAGES[p.name] || CATEGORY_FALLBACK_IMAGES[p.category] || CATEGORY_IMAGES['Placeholder'];
+                    const productImg = p.imageUrl || DEFAULT_PRODUCT_IMAGE;
                     
                     return (
                       <motion.article 
@@ -1205,15 +1327,25 @@ export default function App() {
 
                         {/* Card Info Row */}
                         <div className="flex gap-4 items-start">
-                          <div className={`w-16 h-16 rounded-lg bg-[#f0eeea] overflow-hidden shrink-0 border border-[#eae8e5] ${
-                            prox.isExpired ? 'grayscale opacity-60' : ''
-                          }`}>
+                          <div 
+                            onClick={() => handleStartEditProduct(p)}
+                            className={`w-16 h-16 rounded-lg bg-[#f0eeea] overflow-hidden shrink-0 border border-[#eae8e5] relative group cursor-pointer ${
+                              prox.isExpired ? 'grayscale opacity-60' : ''
+                            }`}
+                            title="Click to edit product / photo"
+                          >
                             <img 
                               className="w-full h-full object-cover" 
                               referrerPolicy="no-referrer"
-                              src={stockImg} 
+                              src={productImg} 
                               alt={p.name} 
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                              }}
                             />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Edit2 size={14} className="text-white" />
+                            </div>
                           </div>
 
                           <div className="space-y-1 pr-24">
@@ -1314,12 +1446,21 @@ export default function App() {
                         {/* Action buttons section */}
                         <div className="flex gap-2 mt-4 border-t border-[#f5f3f0] pt-3">
                           {prox.isExpired ? (
-                            <button
-                              onClick={() => handleMarkWasted(p.id)}
-                              className="w-full py-2 border border-[#D9483B] rounded-lg text-xs font-semibold text-[#D9483B] bg-red-50 hover:bg-red-100 transition-colors active:scale-[0.98] duration-150 flex items-center justify-center gap-1"
-                            >
-                              <Trash2 size={14} /> Remove Item
-                            </button>
+                            <div className="flex items-center gap-2 w-full">
+                              <button
+                                onClick={() => handleMarkWasted(p.id)}
+                                className="flex-1 py-2 border border-[#D9483B] rounded-lg text-xs font-semibold text-[#D9483B] bg-red-50 hover:bg-red-100 transition-colors active:scale-[0.98] duration-150 flex items-center justify-center gap-1"
+                              >
+                                <Trash2 size={14} /> Remove Item
+                              </button>
+                              <button
+                                onClick={() => handleStartEditProduct(p)}
+                                className="px-3 py-2 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98]"
+                                title="Edit Product / Photo"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                            </div>
                           ) : (
                             <>
                               <button
@@ -1327,6 +1468,13 @@ export default function App() {
                                 className="flex-1 py-2 border border-[#747871] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] transition-colors active:scale-[0.98] duration-150"
                               >
                                 Use 1
+                              </button>
+                              <button
+                                onClick={() => handleStartEditProduct(p)}
+                                className="px-3 py-2 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98]"
+                                title="Edit Product / Photo"
+                              >
+                                <Edit2 size={14} />
                               </button>
                               <button
                                 onClick={() => handleMarkWasted(p.id)}
@@ -1432,6 +1580,67 @@ export default function App() {
                     onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                     className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a]"
                   />
+                </div>
+
+                {/* Product Image Upload Section */}
+                <div className="space-y-1.5 bg-[#fbf9f6] p-3.5 rounded-xl border border-[#c4c8bf]/70">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#546250] flex items-center gap-1.5">
+                      <ImageIcon size={14} className="text-[#22301f]" />
+                      Product Image (PNG / Photo)
+                    </label>
+                    <span className="text-[10px] text-[#747871] font-mono">
+                      {formData.imageUrl ? 'Custom Photo' : 'Default Icon'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {/* Preview Thumbnail */}
+                    <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[#c4c8bf] bg-white flex items-center justify-center shadow-xs">
+                      <img 
+                        src={formData.imageUrl || DEFAULT_PRODUCT_IMAGE} 
+                        alt="Product preview" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                        }}
+                      />
+                      {formData.imageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                          className="absolute -top-1 -right-1 bg-[#D9483B] text-white rounded-full p-0.5 shadow hover:scale-110 active:scale-95 transition-all"
+                          title="Remove custom photo and reset to default"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Upload Controls / Dropzone */}
+                    <div className="flex-1 space-y-1.5">
+                      <div className="relative">
+                        <input 
+                          type="file" 
+                          accept="image/png,image/jpeg,image/webp,image/jpg"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleProductImageUpload(file, false);
+                          }}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+                        />
+                        <div className="border border-dashed border-[#22301f] bg-white hover:bg-[#f5f3f0] transition-colors rounded-lg px-3 py-2 flex items-center justify-center gap-2 text-xs font-medium text-[#22301f] cursor-pointer text-center shadow-xs">
+                          <ImagePlus size={14} />
+                          <span>{formData.imageUrl ? 'Change Photo...' : 'Upload Image (PNG/JPG)'}</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-[#747871]">
+                        {formData.imageUrl 
+                          ? 'Custom photo attached. Will display on product card.' 
+                          : 'No image uploaded. The default product PNG will be used.'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Category Chips Selector */}
@@ -2085,9 +2294,20 @@ export default function App() {
               </section>
 
               {/* About section */}
-              <section className="bg-white rounded-xl p-5 shadow-ambient border border-[#eae8e5] space-y-3">
-                <h3 className="font-space font-bold text-sm text-[#0e1b0c]">About</h3>
-                <div className="flex justify-between items-center text-xs">
+              <section className="bg-white rounded-xl p-5 shadow-ambient border border-[#eae8e5] space-y-4">
+                <div className="flex flex-col items-center text-center p-4 bg-[#fbf9f6] rounded-xl border border-[#eae8e5]/80">
+                  <img 
+                    src="/icons/logo-full.png" 
+                    alt="FreshStamp Full Logo" 
+                    className="h-20 w-auto object-contain mb-2 drop-shadow-xs" 
+                  />
+                  <span className="font-space font-bold text-xs uppercase tracking-wider text-[#0e1b0c]">Smart Expiry Tracking</span>
+                  <p className="text-[11px] text-[#546250] mt-1 max-w-[260px] leading-relaxed">
+                    Clinical minimalism meets automated expiry tracking and food waste minimization.
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center text-xs pt-1">
                   <span className="text-[#546250]">App Version</span>
                   <span className="font-mono text-[#747871] bg-[#f5f3f0] px-2.5 py-1 rounded-full font-bold">2.4.0</span>
                 </div>
@@ -2205,7 +2425,7 @@ export default function App() {
                     key={i}
                     onClick={() => {
                       setShowOcrSelector(false);
-                      triggerOcrScan(m.mockOcrData);
+                      triggerOcrScan(m.mockOcrData, undefined, m.image);
                     }}
                     className="w-full flex items-center gap-3 p-2 bg-[#fbf9f6] hover:bg-[#eae8e5] rounded-xl border border-[#c4c8bf]/40 transition-colors text-left"
                   >
@@ -2338,6 +2558,250 @@ export default function App() {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* MODAL 3: EDIT PRODUCT & PHOTO MODAL */}
+        {editingProduct && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0e1b0c]/45 backdrop-blur-sm overflow-y-auto"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 flex flex-col space-y-4 my-8"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-[#eae8e5]">
+                <h3 className="font-space font-bold text-base text-[#0e1b0c]">Edit Product Details & Photo</h3>
+                <button 
+                  onClick={() => setEditingProduct(null)} 
+                  className="text-xs text-[#747871] hover:text-[#0e1b0c] p-1 rounded-md hover:bg-[#f5f3f0]"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Photo Upload & Preview */}
+              <div className="space-y-1.5 bg-[#fbf9f6] p-3 rounded-xl border border-[#c4c8bf]/70">
+                <label className="text-xs font-bold text-[#546250] flex items-center gap-1.5">
+                  <ImageIcon size={14} className="text-[#22301f]" />
+                  Product Photo (PNG / JPG)
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[#c4c8bf] bg-white flex items-center justify-center shadow-xs">
+                    <img 
+                      src={editFormData.imageUrl || DEFAULT_PRODUCT_IMAGE} 
+                      alt="Product preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                      }}
+                    />
+                    {editFormData.imageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setEditFormData(prev => ({ ...prev, imageUrl: '' }))}
+                        className="absolute -top-1 -right-1 bg-[#D9483B] text-white rounded-full p-0.5 shadow hover:scale-110 active:scale-95 transition-all"
+                        title="Remove custom photo"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="relative">
+                      <input 
+                        type="file" 
+                        accept="image/png,image/jpeg,image/webp,image/jpg"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleProductImageUpload(file, true);
+                        }}
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+                      />
+                      <div className="border border-dashed border-[#22301f] bg-white hover:bg-[#f5f3f0] transition-colors rounded-lg px-3 py-2 flex items-center justify-center gap-2 text-xs font-medium text-[#22301f] cursor-pointer text-center">
+                        <ImagePlus size={14} />
+                        <span>{editFormData.imageUrl ? 'Change Photo...' : 'Upload Image (PNG/JPG)'}</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-[#747871]">
+                      {editFormData.imageUrl ? 'Custom image selected.' : 'Default image of product is active.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Name */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#546250]">Product Name</label>
+                <input 
+                  type="text"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 text-xs text-[#1b1c1a] focus:outline-none focus:border-[#22301f]"
+                  required
+                />
+              </div>
+
+              {/* Brand */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#546250]">Brand (Optional)</label>
+                <input 
+                  type="text"
+                  value={editFormData.brand}
+                  onChange={(e) => setEditFormData({ ...editFormData, brand: e.target.value })}
+                  className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 text-xs text-[#1b1c1a] focus:outline-none focus:border-[#22301f]"
+                />
+              </div>
+
+              {/* Expiry Date & Quantity */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#546250]">Expiry Date</label>
+                  <input 
+                    type="date"
+                    value={editFormData.expiryDate}
+                    onChange={(e) => setEditFormData({ ...editFormData, expiryDate: e.target.value })}
+                    className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 text-xs text-[#1b1c1a] font-mono focus:outline-none focus:border-[#22301f]"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#546250]">Quantity</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    value={editFormData.quantity}
+                    onChange={(e) => setEditFormData({ ...editFormData, quantity: Math.max(1, parseInt(e.target.value, 10) || 1) })}
+                    className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 text-xs text-[#1b1c1a] font-mono focus:outline-none focus:border-[#22301f]"
+                  />
+                </div>
+              </div>
+
+              {/* Price */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#546250]">Price (₹)</label>
+                <input 
+                  type="number"
+                  placeholder="0.00"
+                  value={editFormData.price}
+                  onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}
+                  className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 text-xs text-[#1b1c1a] font-mono focus:outline-none focus:border-[#22301f]"
+                />
+              </div>
+
+              {/* Save & Cancel */}
+              <div className="flex gap-2 pt-2">
+                <button 
+                  type="button"
+                  onClick={handleSaveEditedProduct}
+                  className="flex-1 py-2.5 bg-[#22301f] text-white font-bold rounded-lg text-xs hover:opacity-95 active:scale-95 transition-all shadow"
+                >
+                  Save Changes
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2.5 border border-[#747871] text-[#546250] font-bold rounded-lg text-xs hover:bg-[#f5f3f0]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Brand Drawer / Modal */}
+        {showBrandDrawer && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowBrandDrawer(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: -20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: -20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-[#eae8e5] relative space-y-5"
+            >
+              <button 
+                onClick={() => setShowBrandDrawer(false)}
+                className="absolute top-4 right-4 text-[#747871] hover:text-[#0e1b0c] p-1.5 rounded-lg hover:bg-[#f5f3f0] transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex flex-col items-center text-center pt-2">
+                <img 
+                  src="/icons/logo-full.png" 
+                  alt="FreshStamp" 
+                  className="h-20 w-auto object-contain mb-1" 
+                />
+                <span className="font-mono text-[10px] uppercase font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">
+                  v2.4.0 • Zero Waste Engine
+                </span>
+                <p className="text-xs text-[#546250] mt-3 leading-relaxed">
+                  Never let groceries or essentials expire unnoticed. Powered by OCR intelligence and automated inventory tracking.
+                </p>
+              </div>
+
+              {/* Quick stats highlight */}
+              <div className="grid grid-cols-2 gap-2 bg-[#fbf9f6] p-3 rounded-xl border border-[#eae8e5]/70 text-center">
+                <div>
+                  <p className="font-mono text-xs font-bold text-[#0e1b0c]">
+                    {products.filter(p => !p.isUsed).length}
+                  </p>
+                  <p className="text-[10px] text-[#747871]">Active Items</p>
+                </div>
+                <div>
+                  <p className="font-mono text-xs font-bold text-amber-600">
+                    {soonExpiryCount}
+                  </p>
+                  <p className="text-[10px] text-[#747871]">Expiring Soon</p>
+                </div>
+              </div>
+
+              {/* Quick shortcuts */}
+              <div className="space-y-1.5 pt-1">
+                <p className="font-mono text-[9px] font-bold text-[#747871] uppercase tracking-wider">Quick Navigation</p>
+                <button 
+                  onClick={() => { setActiveTab('home'); setShowBrandDrawer(false); }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#f5f3f0] text-xs font-semibold text-[#0e1b0c] transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2"><Home size={15} /> Inventory Shelf</span>
+                  <ArrowRight size={13} className="text-[#747871]" />
+                </button>
+                <button 
+                  onClick={() => { setActiveTab('add'); setShowBrandDrawer(false); }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#f5f3f0] text-xs font-semibold text-[#0e1b0c] transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2"><PlusCircle size={15} /> Add / Scan Item</span>
+                  <ArrowRight size={13} className="text-[#747871]" />
+                </button>
+                <button 
+                  onClick={() => { setActiveTab('stats'); setShowBrandDrawer(false); }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#f5f3f0] text-xs font-semibold text-[#0e1b0c] transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2"><BarChart3 size={15} /> Waste & Analytics</span>
+                  <ArrowRight size={13} className="text-[#747871]" />
+                </button>
+                <button 
+                  onClick={() => { setActiveTab('settings'); setShowBrandDrawer(false); }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#f5f3f0] text-xs font-semibold text-[#0e1b0c] transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2"><SettingsIcon size={15} /> Settings & Backup</span>
+                  <ArrowRight size={13} className="text-[#747871]" />
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

@@ -35,7 +35,8 @@ export const getSeedProducts = (): Product[] => {
       initialQuantity: 2,
       usedCount: 1,
       price: 65,
-      notes: 'Keep refrigerated. Great with toasted sourdough bread.'
+      notes: 'Keep refrigerated. Great with toasted sourdough bread.',
+      imageUrl: '/icons/default-product.png'
     },
     {
       id: 'prod-2',
@@ -47,7 +48,8 @@ export const getSeedProducts = (): Product[] => {
       initialQuantity: 1,
       usedCount: 0,
       price: 185,
-      notes: 'For emergency pain relief and fever.'
+      notes: 'For emergency pain relief and fever.',
+      imageUrl: '/icons/default-product.png'
     },
     {
       id: 'prod-3',
@@ -59,7 +61,8 @@ export const getSeedProducts = (): Product[] => {
       initialQuantity: 1,
       usedCount: 0,
       price: 450,
-      notes: 'Non-comedogenic, dry touch formulation.'
+      notes: 'Non-comedogenic, dry touch formulation.',
+      imageUrl: '/icons/default-product.png'
     },
     {
       id: 'prod-4',
@@ -71,7 +74,8 @@ export const getSeedProducts = (): Product[] => {
       initialQuantity: 1,
       usedCount: 0,
       price: 45,
-      notes: 'Smell test failed.'
+      notes: 'Smell test failed.',
+      imageUrl: '/icons/default-product.png'
     }
   ];
 };
