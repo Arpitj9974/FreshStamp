@@ -1,11 +1,13 @@
-const CACHE_NAME = 'freshstamp-cache-v1.0.0';
+const CACHE_NAME = 'freshstamp-cache-v1.0.1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/logo-with-freshstamp-name.png',
   '/icons/logo.png',
   '/icons/logo-192.png',
   '/icons/logo-512.png',
+  '/icons/logo-full.png',
   '/the main logo.png',
   '/the default image of product.png',
   '/favicon.png'

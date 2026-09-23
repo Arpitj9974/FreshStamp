@@ -204,6 +204,16 @@ export default function App() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
+  // App Opening / Launch Splash Screen Animation State
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 1300);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
@@ -1127,6 +1137,63 @@ export default function App() {
             {toastMessage.type === 'error' && <AlertTriangle size={16} />}
             {toastMessage.type === 'info' && <Info size={16} />}
             {toastMessage.text}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* App Opening / Launch Animated Splash Screen */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            key="app-launch-splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.03, filter: 'blur(4px)' }}
+            transition={{ duration: 0.45, ease: 'easeInOut' }}
+            className="fixed inset-0 z-[9999] bg-[#fbf9f6] flex flex-col items-center justify-center select-none px-6"
+          >
+            <div className="relative flex flex-col items-center max-w-sm w-full">
+              {/* Soft ambient green glow */}
+              <div className="absolute w-64 h-64 bg-[#3E9B4F]/10 rounded-full blur-3xl pointer-events-none -top-8" />
+
+              <motion.div
+                initial={{ scale: 0.92, opacity: 0, y: 10 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="relative z-10 flex flex-col items-center w-full"
+              >
+                {/* Full Brand Logo with FreshStamp Name */}
+                <motion.img
+                  src="/logo-with-freshstamp-name.png?v=1.0.1"
+                  alt="FreshStamp"
+                  className="w-[280px] max-w-[80vw] h-auto object-contain drop-shadow-sm"
+                  animate={{ scale: [1, 1.02, 1] }}
+                  transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/icons/logo-full.png';
+                  }}
+                />
+
+                {/* Minimalist animated progress bar */}
+                <div className="w-36 h-1 bg-[#22301f]/10 rounded-full overflow-hidden mt-6">
+                  <motion.div
+                    className="h-full bg-[#3E9B4F] rounded-full"
+                    initial={{ width: '0%' }}
+                    animate={{ width: '100%' }}
+                    transition={{ duration: 1.15, ease: 'easeInOut' }}
+                  />
+                </div>
+
+                {/* Tagline */}
+                <motion.p
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25, duration: 0.4 }}
+                  className="text-[11px] text-[#546250] font-space font-medium tracking-wide mt-3.5 text-center"
+                >
+                  Smart Expiry Tracking & Waste Minimization
+                </motion.p>
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
