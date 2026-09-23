@@ -1076,7 +1076,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7F2] font-sans text-[#1b1c1a] relative pb-28">
+    <div className="min-h-screen bg-[#F4F7F2] font-sans text-[#1b1c1a] relative pb-28 md:pb-12">
       
       {/* Toast Notifier */}
       <AnimatePresence>
@@ -1102,49 +1102,96 @@ export default function App() {
       </AnimatePresence>
 
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 w-full z-40 bg-white border-b border-[#eae8e5] px-5 py-4 flex justify-between items-center h-16">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setShowBrandDrawer(true)}
-            className="hover:opacity-80 transition-opacity active:scale-95 duration-150 p-1 -ml-1 rounded-lg hover:bg-[#f5f3f0]"
-            id="menu-btn"
-            title="Open Brand Menu & Shortcuts"
-          >
-            <Menu className="text-[#0e1b0c]" size={22} />
-          </button>
-          <div 
-            onClick={() => setActiveTab('home')}
-            className="flex items-center gap-2.5 cursor-pointer group select-none"
-            title="FreshStamp Home"
-          >
-            <div className="w-8 h-8 rounded-xl overflow-hidden border border-[#c4c8bf]/70 shadow-xs flex-shrink-0 group-hover:scale-105 transition-transform duration-150 bg-white p-0.5 flex items-center justify-center">
-              <img 
-                src="/icons/logo.png" 
-                alt="FreshStamp Logo" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="font-space text-lg font-bold text-[#0e1b0c] leading-none tracking-tight group-hover:text-emerald-800 transition-colors">FreshStamp</h1>
-              <p className="font-mono text-[10px] text-[#444841] tracking-wider mt-[2px]">{getFormattedDate()}</p>
+      <header className="sticky top-0 w-full z-40 bg-white border-b border-[#eae8e5] px-4 md:px-8 py-3 flex justify-between items-center h-16 shadow-xs">
+        <div className="max-w-6xl mx-auto w-full flex justify-between items-center">
+          <div className="flex items-center gap-3 md:gap-4">
+            <button 
+              onClick={() => setShowBrandDrawer(true)}
+              className="hover:opacity-80 transition-opacity active:scale-95 duration-150 p-1.5 rounded-lg hover:bg-[#f5f3f0]"
+              id="menu-btn"
+              title="Open Brand Menu & Shortcuts"
+            >
+              <Menu className="text-[#0e1b0c]" size={22} />
+            </button>
+            <div 
+              onClick={() => setActiveTab('home')}
+              className="flex items-center gap-2.5 cursor-pointer group select-none"
+              title="FreshStamp Home"
+            >
+              <div className="w-8 h-8 rounded-xl overflow-hidden border border-[#c4c8bf]/70 shadow-xs flex-shrink-0 group-hover:scale-105 transition-transform duration-150 bg-white p-0.5 flex items-center justify-center">
+                <img 
+                  src="/icons/logo.png" 
+                  alt="FreshStamp Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div>
+                <h1 className="font-space text-lg font-bold text-[#0e1b0c] leading-none tracking-tight group-hover:text-emerald-800 transition-colors">FreshStamp</h1>
+                <p className="font-mono text-[10px] text-[#444841] tracking-wider mt-[2px]">{getFormattedDate()}</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div 
-          onClick={() => setActiveTab('settings')}
-          className="w-10 h-10 rounded-full overflow-hidden border border-[#c4c8bf] bg-[#eae8e5] cursor-pointer hover:opacity-90 active:scale-95 transition-all duration-150"
-        >
-          <img 
-            className="w-full h-full object-cover" 
-            referrerPolicy="no-referrer"
-            alt={user?.displayName || "Alex Sterling"} 
-            src={user?.photoURL || CATEGORY_IMAGES['Alex Sterling'] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'} 
-          />
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-1.5 bg-[#fbf9f6] border border-[#eae8e5] p-1 rounded-xl shadow-inner">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                activeTab === 'home'
+                  ? 'bg-[#22301f] text-white shadow-xs'
+                  : 'text-[#546250] hover:text-[#0e1b0c] hover:bg-white'
+              }`}
+            >
+              <Home size={15} /> Home
+            </button>
+            <button
+              onClick={() => setActiveTab('add')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                activeTab === 'add'
+                  ? 'bg-[#22301f] text-white shadow-xs'
+                  : 'text-[#546250] hover:text-[#0e1b0c] hover:bg-white'
+              }`}
+            >
+              <PlusCircle size={15} /> Add Item
+            </button>
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                activeTab === 'stats'
+                  ? 'bg-[#22301f] text-white shadow-xs'
+                  : 'text-[#546250] hover:text-[#0e1b0c] hover:bg-white'
+              }`}
+            >
+              <BarChart3 size={15} /> Stats
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                activeTab === 'settings'
+                  ? 'bg-[#22301f] text-white shadow-xs'
+                  : 'text-[#546250] hover:text-[#0e1b0c] hover:bg-white'
+              }`}
+            >
+              <SettingsIcon size={15} /> Settings
+            </button>
+          </nav>
+
+          <div 
+            onClick={() => setActiveTab('settings')}
+            className="w-10 h-10 rounded-full overflow-hidden border border-[#c4c8bf] bg-[#eae8e5] cursor-pointer hover:opacity-90 active:scale-95 transition-all duration-150 shadow-xs"
+          >
+            <img 
+              className="w-full h-full object-cover" 
+              referrerPolicy="no-referrer"
+              alt={user?.displayName || "Alex Sterling"} 
+              src={user?.photoURL || CATEGORY_IMAGES['Alex Sterling'] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'} 
+            />
+          </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-md mx-auto px-5 pt-4 space-y-4">
+      <main className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 md:px-8 pt-4 md:pt-6 space-y-5">
 
         {/* Dynamic Alert Banner (Active only on Home) */}
         {activeTab === 'home' && soonExpiryCount > 0 && (
@@ -1172,7 +1219,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="space-y-4"
+              className="space-y-5"
             >
               {/* Search Bar */}
               <div className="relative group">
@@ -1200,7 +1247,7 @@ export default function App() {
                     </button>
                   )}
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                   {['Grocery', 'Medicine', 'Cosmetics', 'Household', 'Other', ...customCategories].map((cat) => {
                     const catProducts = products.filter(p => p.category === cat && !p.isUsed && !p.isWasted);
                     const isSelected = categoryFilter === cat;
@@ -1268,6 +1315,12 @@ export default function App() {
 
               {/* Product List */}
               <section className="space-y-3">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-xs font-bold text-[#546250] uppercase tracking-wider">
+                    {categoryFilter === 'All' ? 'Tracked Products' : `${categoryFilter} Products`} ({filteredProducts.length})
+                  </h3>
+                </div>
+
                 {filteredProducts.length === 0 ? (
                   /* Empty state */
                   <div className="bg-white rounded-2xl p-8 flex flex-col items-center justify-center text-center shadow-ambient border border-[#eae8e5] space-y-6 mt-4">
@@ -1300,195 +1353,199 @@ export default function App() {
                     </button>
                   </div>
                 ) : (
-                  /* Filled state list grid */
-                  filteredProducts.map((p) => {
-                    const prox = getProximityInfo(p.expiryDate);
-                    const productImg = p.imageUrl || DEFAULT_PRODUCT_IMAGE;
-                    
-                    return (
-                      <motion.article 
-                        key={p.id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className={`bg-white rounded-xl p-4 flex flex-col relative shadow-ambient border transition-all ${
-                          prox.isExpired 
-                            ? 'border-l-4 border-l-[#D9483B] border-[#eae8e5]' 
-                            : 'border-[#eae8e5]'
-                        }`}
-                      >
-                        {/* Expiry Stamp Badge */}
-                        <div className="absolute top-4 right-4">
-                          <span className={`expiry-stamp ${prox.color}`}>
-                            {prox.text}
-                          </span>
-                        </div>
-
-                        {/* Card Info Row */}
-                        <div className="flex gap-4 items-start">
-                          <div 
-                            onClick={() => handleStartEditProduct(p)}
-                            className={`w-16 h-16 rounded-lg bg-[#f0eeea] overflow-hidden shrink-0 border border-[#eae8e5] relative group cursor-pointer ${
-                              prox.isExpired ? 'grayscale opacity-60' : ''
-                            }`}
-                            title="Click to edit product / photo"
-                          >
-                            <img 
-                              className="w-full h-full object-cover" 
-                              referrerPolicy="no-referrer"
-                              src={productImg} 
-                              alt={p.name} 
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
-                              }}
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Edit2 size={14} className="text-white" />
-                            </div>
-                          </div>
-
-                          <div className="space-y-1 pr-24">
-                            <h3 className={`font-space font-bold text-base leading-tight ${
-                              prox.isExpired ? 'text-[#D9483B]' : 'text-[#0e1b0c]'
-                            }`}>
-                              {p.name}
-                            </h3>
-                            {p.brand && (
-                              <p className="text-xs text-[#546250] font-medium">{p.brand}</p>
-                            )}
-                            
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <span className="px-2 py-0.5 rounded bg-[#d5e4cd] text-[#596654] font-mono text-[9px] uppercase font-bold tracking-wider">
-                                {p.category}
+                  /* Filled state responsive list grid */
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredProducts.map((p) => {
+                      const prox = getProximityInfo(p.expiryDate);
+                      const productImg = p.imageUrl || DEFAULT_PRODUCT_IMAGE;
+                      
+                      return (
+                        <motion.article 
+                          key={p.id}
+                          layout
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className={`bg-white rounded-xl p-4 flex flex-col justify-between relative shadow-ambient border transition-all ${
+                            prox.isExpired 
+                              ? 'border-l-4 border-l-[#D9483B] border-[#eae8e5]' 
+                              : 'border-[#eae8e5]'
+                          }`}
+                        >
+                          <div>
+                            {/* Expiry Stamp Badge */}
+                            <div className="absolute top-4 right-4">
+                              <span className={`expiry-stamp ${prox.color}`}>
+                                {prox.text}
                               </span>
-                              <span className="bg-[#eae8e5] text-[#111f0f] px-1.5 py-0.5 rounded text-[10px] font-bold">
-                                ×{p.quantity}
-                              </span>
-                              {p.usedCount > 0 && (
-                                <span className="text-[10px] text-[#546250] italic opacity-80">
-                                  {p.usedCount} used
-                                </span>
-                              )}
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Batch Details and Timeline section */}
-                        {(() => {
-                          const sameNameProducts = products.filter(item => 
-                            item.name.trim().toLowerCase() === p.name.trim().toLowerCase() && 
-                            (item.brand || '').trim().toLowerCase() === (p.brand || '').trim().toLowerCase()
-                          ).sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));
+                            {/* Card Info Row */}
+                            <div className="flex gap-4 items-start">
+                              <div 
+                                onClick={() => handleStartEditProduct(p)}
+                                className={`w-16 h-16 rounded-lg bg-[#f0eeea] overflow-hidden shrink-0 border border-[#eae8e5] relative group cursor-pointer ${
+                                  prox.isExpired ? 'grayscale opacity-60' : ''
+                                }`}
+                                title="Click to edit product / photo"
+                              >
+                                <img 
+                                  className="w-full h-full object-cover" 
+                                  referrerPolicy="no-referrer"
+                                  src={productImg} 
+                                  alt={p.name} 
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Edit2 size={14} className="text-white" />
+                                </div>
+                              </div>
 
-                          const hasMultipleBatches = sameNameProducts.length > 1;
-                          const batchIndex = sameNameProducts.findIndex(item => item.id === p.id);
-                          const isEarliestBatch = hasMultipleBatches && batchIndex === 0;
-                          const shelfLifePercent = getShelfLifePercent(p.mfdDate, p.expiryDate);
-
-                          return (
-                            <div className="mt-3.5 space-y-2">
-                              {/* Batch Badges */}
-                              {hasMultipleBatches && (
-                                <div className="flex flex-wrap items-center gap-1.5 bg-[#fdfdfc] p-2 rounded-lg border border-[#eae8e5]">
-                                  <span className="text-[10px] font-bold text-[#1b1c1a] bg-[#eae8e5] px-2 py-0.5 rounded flex items-center gap-1">
-                                    📦 Batch {batchIndex + 1} of {sameNameProducts.length}
+                              <div className="space-y-1 pr-24">
+                                <h3 className={`font-space font-bold text-base leading-tight ${
+                                  prox.isExpired ? 'text-[#D9483B]' : 'text-[#0e1b0c]'
+                                }`}>
+                                  {p.name}
+                                </h3>
+                                {p.brand && (
+                                  <p className="text-xs text-[#546250] font-medium">{p.brand}</p>
+                                )}
+                                
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <span className="px-2 py-0.5 rounded bg-[#d5e4cd] text-[#596654] font-mono text-[9px] uppercase font-bold tracking-wider">
+                                    {p.category}
                                   </span>
-                                  {isEarliestBatch ? (
-                                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1 animate-pulse">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                                      Consume First! 💡
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center gap-1">
-                                      ⏳ Backup Batch
+                                  <span className="bg-[#eae8e5] text-[#111f0f] px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                    ×{p.quantity}
+                                  </span>
+                                  {p.usedCount > 0 && (
+                                    <span className="text-[10px] text-[#546250] italic opacity-80">
+                                      {p.usedCount} used
                                     </span>
                                   )}
                                 </div>
-                              )}
-
-                              {/* Lifespan / Date details */}
-                              <div className="space-y-1">
-                                {shelfLifePercent !== null ? (
-                                  <div className="space-y-1 bg-[#fdfdfc] p-2.5 rounded-lg border border-[#eae8e5]">
-                                    <div className="flex justify-between text-[10px] font-bold text-[#546250]">
-                                      <span className="flex items-center gap-1">🛠️ MFD: {formatDateToReadable(p.mfdDate!)}</span>
-                                      <span className="flex items-center gap-1 text-[#0e1b0c]">🚨 EXP: {formatDateToReadable(p.expiryDate)}</span>
-                                    </div>
-                                    <div className="w-full bg-[#eae8e5] h-1.5 rounded-full overflow-hidden mt-1.5">
-                                      <div 
-                                        className={`h-full rounded-full transition-all duration-300 ${
-                                          shelfLifePercent > 85 
-                                            ? 'bg-[#D9483B]' 
-                                            : shelfLifePercent > 60 
-                                            ? 'bg-amber-500' 
-                                            : 'bg-emerald-600'
-                                        }`}
-                                        style={{ width: `${shelfLifePercent}%` }}
-                                      />
-                                    </div>
-                                    <div className="text-[9px] text-[#747871] text-right font-medium">
-                                      Shelf Life Consumed: {shelfLifePercent}%
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1.5 text-xs text-[#546250] bg-[#fbf9f6] p-2 rounded-lg border border-[#eae8e5]">
-                                    <Calendar size={13} className="text-[#747871]" />
-                                    <span className="font-semibold">Expiry Date:</span>
-                                    <span className="font-mono text-[#0e1b0c] font-bold">{formatDateToReadable(p.expiryDate)}</span>
-                                  </div>
-                                )}
                               </div>
                             </div>
-                          );
-                        })()}
 
-                        {/* Action buttons section */}
-                        <div className="flex gap-2 mt-4 border-t border-[#f5f3f0] pt-3">
-                          {prox.isExpired ? (
-                            <div className="flex items-center gap-2 w-full">
-                              <button
-                                onClick={() => handleMarkWasted(p.id)}
-                                className="flex-1 py-2 border border-[#D9483B] rounded-lg text-xs font-semibold text-[#D9483B] bg-red-50 hover:bg-red-100 transition-colors active:scale-[0.98] duration-150 flex items-center justify-center gap-1"
-                              >
-                                <Trash2 size={14} /> Remove Item
-                              </button>
-                              <button
-                                onClick={() => handleStartEditProduct(p)}
-                                className="px-3 py-2 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98]"
-                                title="Edit Product / Photo"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => handleUseProduct(p.id)}
-                                className="flex-1 py-2 border border-[#747871] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] transition-colors active:scale-[0.98] duration-150"
-                              >
-                                Use 1
-                              </button>
-                              <button
-                                onClick={() => handleStartEditProduct(p)}
-                                className="px-3 py-2 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98]"
-                                title="Edit Product / Photo"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleMarkWasted(p.id)}
-                                className="px-3 py-2 border border-dashed border-[#c4c8bf] rounded-lg text-xs font-semibold text-[#747871] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all active:scale-[0.98]"
-                                title="Mark as Waste"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </motion.article>
-                    );
-                  })
+                            {/* Batch Details and Timeline section */}
+                            {(() => {
+                              const sameNameProducts = products.filter(item => 
+                                item.name.trim().toLowerCase() === p.name.trim().toLowerCase() && 
+                                (item.brand || '').trim().toLowerCase() === (p.brand || '').trim().toLowerCase()
+                              ).sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));
+
+                              const hasMultipleBatches = sameNameProducts.length > 1;
+                              const batchIndex = sameNameProducts.findIndex(item => item.id === p.id);
+                              const isEarliestBatch = hasMultipleBatches && batchIndex === 0;
+                              const shelfLifePercent = getShelfLifePercent(p.mfdDate, p.expiryDate);
+
+                              return (
+                                <div className="mt-3.5 space-y-2">
+                                  {/* Batch Badges */}
+                                  {hasMultipleBatches && (
+                                    <div className="flex flex-wrap items-center gap-1.5 bg-[#fdfdfc] p-2 rounded-lg border border-[#eae8e5]">
+                                      <span className="text-[10px] font-bold text-[#1b1c1a] bg-[#eae8e5] px-2 py-0.5 rounded flex items-center gap-1">
+                                        📦 Batch {batchIndex + 1} of {sameNameProducts.length}
+                                      </span>
+                                      {isEarliestBatch ? (
+                                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1 animate-pulse">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                                          Consume First! 💡
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center gap-1">
+                                          ⏳ Backup Batch
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Lifespan / Date details */}
+                                  <div className="space-y-1">
+                                    {shelfLifePercent !== null ? (
+                                      <div className="space-y-1 bg-[#fdfdfc] p-2.5 rounded-lg border border-[#eae8e5]">
+                                        <div className="flex justify-between text-[10px] font-bold text-[#546250]">
+                                          <span className="flex items-center gap-1">🛠️ MFD: {formatDateToReadable(p.mfdDate!)}</span>
+                                          <span className="flex items-center gap-1 text-[#0e1b0c]">🚨 EXP: {formatDateToReadable(p.expiryDate)}</span>
+                                        </div>
+                                        <div className="w-full bg-[#eae8e5] h-1.5 rounded-full overflow-hidden mt-1.5">
+                                          <div 
+                                            className={`h-full rounded-full transition-all duration-300 ${
+                                              shelfLifePercent > 85 
+                                                ? 'bg-[#D9483B]' 
+                                                : shelfLifePercent > 60 
+                                                ? 'bg-amber-500' 
+                                                : 'bg-emerald-600'
+                                            }`}
+                                            style={{ width: `${shelfLifePercent}%` }}
+                                          />
+                                        </div>
+                                        <div className="text-[9px] text-[#747871] text-right font-medium">
+                                          Shelf Life Consumed: {shelfLifePercent}%
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-1.5 text-xs text-[#546250] bg-[#fbf9f6] p-2 rounded-lg border border-[#eae8e5]">
+                                        <Calendar size={13} className="text-[#747871]" />
+                                        <span className="font-semibold">Expiry Date:</span>
+                                        <span className="font-mono text-[#0e1b0c] font-bold">{formatDateToReadable(p.expiryDate)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          {/* Action buttons section */}
+                          <div className="flex gap-2 mt-4 border-t border-[#f5f3f0] pt-3">
+                            {prox.isExpired ? (
+                              <div className="flex items-center gap-2 w-full">
+                                <button
+                                  onClick={() => handleMarkWasted(p.id)}
+                                  className="flex-1 py-2 border border-[#D9483B] rounded-lg text-xs font-semibold text-[#D9483B] bg-red-50 hover:bg-red-100 transition-colors active:scale-[0.98] duration-150 flex items-center justify-center gap-1"
+                                >
+                                  <Trash2 size={14} /> Remove Item
+                                </button>
+                                <button
+                                  onClick={() => handleStartEditProduct(p)}
+                                  className="px-3 py-2 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98]"
+                                  title="Edit Product / Photo"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => handleUseProduct(p.id)}
+                                  className="flex-1 py-2 border border-[#747871] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] transition-colors active:scale-[0.98] duration-150"
+                                >
+                                  Use 1
+                                </button>
+                                <button
+                                  onClick={() => handleStartEditProduct(p)}
+                                  className="px-3 py-2 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98]"
+                                  title="Edit Product / Photo"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleMarkWasted(p.id)}
+                                  className="px-3 py-2 border border-dashed border-[#c4c8bf] rounded-lg text-xs font-semibold text-[#747871] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all active:scale-[0.98]"
+                                  title="Mark as Waste"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </motion.article>
+                      );
+                    })}
+                  </div>
                 )}
               </section>
 
@@ -1512,7 +1569,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="space-y-4"
+              className="space-y-5 max-w-5xl mx-auto"
             >
               {/* Headline */}
               <div>
@@ -1520,320 +1577,336 @@ export default function App() {
                 <p className="text-[#546250] text-xs mt-1">Track another item to reduce household waste.</p>
               </div>
 
-              {/* Smart Scanner Bento Panel */}
-              <section className="grid grid-cols-2 gap-3">
-                <div className="relative overflow-hidden group">
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer z-10" 
-                  />
-                  <button className="w-full bg-white border border-[#c4c8bf] p-4 rounded-xl flex flex-col items-center justify-center gap-2 shadow-ambient group-hover:bg-[#f5f3f0] active:scale-95 transition-all text-center">
-                    <Camera className="text-[#22301f]" size={24} />
-                    <span className="text-xs font-semibold text-[#1b1c1a]">Photo of Expiry</span>
-                  </button>
-                </div>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Left Column on Desktop: Smart Scanner & Visual Tip */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="bg-white p-5 rounded-2xl shadow-ambient border border-[#eae8e5] space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={18} className="text-emerald-700" />
+                      <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Smart OCR Scanner</h3>
+                    </div>
+                    <p className="text-xs text-[#546250] leading-relaxed">
+                      Snap a picture of the expiry label or test with an instant AI packaging demo.
+                    </p>
 
-                <button 
-                  onClick={() => setShowOcrSelector(true)}
-                  className="w-full bg-white border border-[#c4c8bf] p-4 rounded-xl flex flex-col items-center justify-center gap-2 shadow-ambient hover:bg-[#f5f3f0] active:scale-95 transition-all text-center"
-                >
-                  <Sparkles className="text-[#22301f]" size={24} />
-                  <span className="text-xs font-semibold text-[#1b1c1a]">AI Quick Demo</span>
-                </button>
-              </section>
-
-              {/* Divider */}
-              <div className="relative py-2 flex items-center">
-                <div className="flex-grow border-t border-[#c4c8bf]"></div>
-                <span className="flex-shrink mx-3 text-xs text-[#546250] bg-[#F4F7F2] px-2 font-medium">or enter manually</span>
-                <div className="flex-grow border-t border-[#c4c8bf]"></div>
-              </div>
-
-              {/* Form Entry */}
-              <form onSubmit={handleManualAddSubmit} className="space-y-4 bg-white p-5 rounded-2xl shadow-ambient border border-[#eae8e5]">
-                
-                {/* Product Name */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-[#546250]">Product Name</label>
-                  <div className="relative">
-                    <input 
-                      type="text"
-                      placeholder="e.g., Organic Ghee"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a]"
-                      required
-                    />
-                    <ShoppingBasket className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c4c8bf]" size={18} />
-                  </div>
-                </div>
-
-                {/* Brand */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-[#546250]">Brand (Optional)</label>
-                  <input 
-                    type="text"
-                    placeholder="e.g., Epigamia"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a]"
-                  />
-                </div>
-
-                {/* Product Image Upload Section */}
-                <div className="space-y-1.5 bg-[#fbf9f6] p-3.5 rounded-xl border border-[#c4c8bf]/70">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[#546250] flex items-center gap-1.5">
-                      <ImageIcon size={14} className="text-[#22301f]" />
-                      Product Image (PNG / Photo)
-                    </label>
-                    <span className="text-[10px] text-[#747871] font-mono">
-                      {formData.imageUrl ? 'Custom Photo' : 'Default Icon'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {/* Preview Thumbnail */}
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[#c4c8bf] bg-white flex items-center justify-center shadow-xs">
-                      <img 
-                        src={formData.imageUrl || DEFAULT_PRODUCT_IMAGE} 
-                        alt="Product preview" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
-                        }}
-                      />
-                      {formData.imageUrl && (
-                        <button
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
-                          className="absolute -top-1 -right-1 bg-[#D9483B] text-white rounded-full p-0.5 shadow hover:scale-110 active:scale-95 transition-all"
-                          title="Remove custom photo and reset to default"
-                        >
-                          <X size={12} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative overflow-hidden group">
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                        />
+                        <button className="w-full bg-[#fbf9f6] border border-[#c4c8bf] p-4 rounded-xl flex flex-col items-center justify-center gap-2 shadow-xs group-hover:bg-[#f5f3f0] active:scale-95 transition-all text-center cursor-pointer">
+                          <Camera className="text-[#22301f]" size={24} />
+                          <span className="text-xs font-semibold text-[#1b1c1a]">Photo of Expiry</span>
                         </button>
+                      </div>
+
+                      <button 
+                        onClick={() => setShowOcrSelector(true)}
+                        className="w-full bg-[#fbf9f6] border border-[#c4c8bf] p-4 rounded-xl flex flex-col items-center justify-center gap-2 shadow-xs hover:bg-[#f5f3f0] active:scale-95 transition-all text-center cursor-pointer"
+                      >
+                        <Sparkles className="text-[#22301f]" size={24} />
+                        <span className="text-xs font-semibold text-[#1b1c1a]">AI Quick Demo</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Visual Suggested Tips Card */}
+                  <div className="rounded-xl overflow-hidden shadow-ambient h-40 relative group border border-[#eae8e5] hidden lg:block">
+                    <img 
+                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                      referrerPolicy="no-referrer"
+                      src={CATEGORY_IMAGES['Visual Context'] || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDeZZp7-GCbeXbwzYkxWTh01iFfzQKMDVvxyHdo9GpXITDJ5P6A6hp5_khVG0ehAT-qUQgRaPX-hgEqaEBwDfJHqTsx-zzxJ4GHZVPP2qqetD3quVy7PBtIteWUzsW3vihvY4JIbHg2Slz5d_BIUVQJA3rZxvT2bpNfwwo09OLN3roZk4-servsgUTLaJyzNkzeMTgyq22QqM5X7_I_jfpvRBnxfmo61Vl_cAtnnEMtXN5Rd8XPwjcf604ai7h0aBlKLWobZ-h2E4w'} 
+                      alt="Pantry layouts"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                    <div className="absolute bottom-3 left-4">
+                      <span className="text-[9px] font-bold text-white tracking-widest font-mono">SUGGESTED FOR YOU</span>
+                      <p className="text-white text-sm font-space font-bold">Zero Waste Kitchen Tips</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Form Entry */}
+                <div className="lg:col-span-7">
+                  {/* Divider for mobile view only */}
+                  <div className="relative py-2 flex items-center lg:hidden">
+                    <div className="flex-grow border-t border-[#c4c8bf]"></div>
+                    <span className="flex-shrink mx-3 text-xs text-[#546250] bg-[#F4F7F2] px-2 font-medium">or enter manually</span>
+                    <div className="flex-grow border-t border-[#c4c8bf]"></div>
+                  </div>
+
+                  <form onSubmit={handleManualAddSubmit} className="space-y-4 bg-white p-5 md:p-6 rounded-2xl shadow-ambient border border-[#eae8e5]">
+                    
+                    {/* Product Name */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#546250]">Product Name</label>
+                      <div className="relative">
+                        <input 
+                          type="text"
+                          placeholder="e.g., Organic Ghee"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a]"
+                          required
+                        />
+                        <ShoppingBasket className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c4c8bf]" size={18} />
+                      </div>
+                    </div>
+
+                    {/* Brand */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#546250]">Brand (Optional)</label>
+                      <input 
+                        type="text"
+                        placeholder="e.g., Epigamia"
+                        value={formData.brand}
+                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                        className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a]"
+                      />
+                    </div>
+
+                    {/* Product Image Upload Section */}
+                    <div className="space-y-1.5 bg-[#fbf9f6] p-3.5 rounded-xl border border-[#c4c8bf]/70">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-[#546250] flex items-center gap-1.5">
+                          <ImageIcon size={14} className="text-[#22301f]" />
+                          Product Image (PNG / Photo)
+                        </label>
+                        <span className="text-[10px] text-[#747871] font-mono">
+                          {formData.imageUrl ? 'Custom Photo' : 'Default Icon'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {/* Preview Thumbnail */}
+                        <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[#c4c8bf] bg-white flex items-center justify-center shadow-xs">
+                          <img 
+                            src={formData.imageUrl || DEFAULT_PRODUCT_IMAGE} 
+                            alt="Product preview" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                            }}
+                          />
+                          {formData.imageUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                              className="absolute -top-1 -right-1 bg-[#D9483B] text-white rounded-full p-0.5 shadow hover:scale-110 active:scale-95 transition-all"
+                              title="Remove custom photo and reset to default"
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Upload Controls / Dropzone */}
+                        <div className="flex-1 space-y-1.5">
+                          <div className="relative">
+                            <input 
+                              type="file" 
+                              accept="image/png,image/jpeg,image/webp,image/jpg"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleProductImageUpload(file, false);
+                              }}
+                              className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+                            />
+                            <div className="border border-dashed border-[#22301f] bg-white hover:bg-[#f5f3f0] transition-colors rounded-lg px-3 py-2 flex items-center justify-center gap-2 text-xs font-medium text-[#22301f] cursor-pointer text-center shadow-xs">
+                              <ImagePlus size={14} />
+                              <span>{formData.imageUrl ? 'Change Photo...' : 'Upload Image (PNG/JPG)'}</span>
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-[#747871]">
+                            {formData.imageUrl 
+                              ? 'Custom photo attached. Will display on product card.' 
+                              : 'No image uploaded. The default product PNG will be used.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Category Chips Selector */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[#546250] block">Category</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[...DEFAULT_CATEGORIES, ...customCategories].map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, category: cat })}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
+                              formData.category === cat 
+                                ? 'bg-[#22301f] text-white border-transparent shadow-sm' 
+                                : 'bg-white text-[#444841] border-[#c4c8bf] hover:bg-[#f5f3f0]'
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                        
+                        {/* Inline Add Custom Category Button */}
+                        {!showNewCatInput && (
+                          <button
+                            type="button"
+                            onClick={() => setShowNewCatInput(true)}
+                            className="px-3 py-1.5 rounded-full text-xs font-bold border border-dashed border-[#22301f] bg-[#fbf9f6] text-[#22301f] hover:bg-[#eae8e5] active:scale-95 transition-all flex items-center gap-1"
+                          >
+                            <Plus size={12} /> Add Custom
+                          </button>
+                        )}
+                      </div>
+
+                      {/* New Custom Category Input Field */}
+                      {showNewCatInput && (
+                        <div className="flex items-center gap-2 mt-2 bg-[#fbf9f6] border border-dashed border-[#c4c8bf] rounded-lg p-2 animate-fadeIn">
+                          <input
+                            type="text"
+                            placeholder="New category name (e.g. Dairy)"
+                            value={newCatName}
+                            onChange={(e) => setNewCatName(e.target.value)}
+                            className="flex-1 bg-transparent border-none p-1 focus:ring-0 text-xs focus:outline-none font-medium text-[#1b1c1a]"
+                            maxLength={30}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddCustomCategory}
+                            className="px-3 py-1.5 bg-[#22301f] text-white text-[11px] font-bold rounded hover:opacity-95 active:scale-95 transition-all"
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowNewCatInput(false);
+                              setNewCatName('');
+                            }}
+                            className="px-2 py-1.5 text-[#747871] hover:text-[#0e1b0c] text-[11px] font-medium"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       )}
                     </div>
 
-                    {/* Upload Controls / Dropzone */}
-                    <div className="flex-1 space-y-1.5">
-                      <div className="relative">
-                        <input 
-                          type="file" 
-                          accept="image/png,image/jpeg,image/webp,image/jpg"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleProductImageUpload(file, false);
-                          }}
-                          className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
-                        />
-                        <div className="border border-dashed border-[#22301f] bg-white hover:bg-[#f5f3f0] transition-colors rounded-lg px-3 py-2 flex items-center justify-center gap-2 text-xs font-medium text-[#22301f] cursor-pointer text-center shadow-xs">
-                          <ImagePlus size={14} />
-                          <span>{formData.imageUrl ? 'Change Photo...' : 'Upload Image (PNG/JPG)'}</span>
+                    {/* Dates Grid (Manufactured Date and Expiry Date) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Manufactured Date (MFD) */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#546250] block">Manufacture Date (MFD) (Optional)</label>
+                        <div className="bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 flex items-center shadow-inner h-11">
+                          <div className="flex items-center gap-2 w-full">
+                            <Calendar className="text-[#546250]" size={16} />
+                            <input 
+                              type="date"
+                              value={formData.mfdDate}
+                              onChange={(e) => setFormData({ ...formData, mfdDate: e.target.value })}
+                              className="bg-transparent border-none p-0 focus:ring-0 text-xs font-mono text-[#0e1b0c] uppercase w-full focus:outline-none"
+                            />
+                          </div>
                         </div>
                       </div>
-                      <p className="text-[10px] text-[#747871]">
-                        {formData.imageUrl 
-                          ? 'Custom photo attached. Will display on product card.' 
-                          : 'No image uploaded. The default product PNG will be used.'}
-                      </p>
+
+                      {/* Expiry Date (EXP) */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#546250] block">Expiry Date (EXP)</label>
+                        <div className="bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 flex items-center justify-between shadow-inner h-11">
+                          <div className="flex items-center gap-2 w-full">
+                            <Calendar className="text-[#546250]" size={16} />
+                            <input 
+                              type="date"
+                              value={formData.expiryDate}
+                              onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                              className="bg-transparent border-none p-0 focus:ring-0 text-xs font-mono text-[#0e1b0c] uppercase w-full focus:outline-none"
+                              required
+                            />
+                          </div>
+                          <div className="shrink-0 ml-1">
+                            {formData.expiryDate ? (
+                              <span className={`expiry-stamp text-[8px] py-0.5 px-1.5 font-bold ${getProximityInfo(formData.expiryDate).color}`}>
+                                {getProximityInfo(formData.expiryDate).text}
+                              </span>
+                            ) : (
+                              <span className="expiry-stamp text-[8px] py-0.5 px-1.5 text-[#747871] border-[#747871] opacity-60">
+                                REQUIRED
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Category Chips Selector */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#546250] block">Category</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[...DEFAULT_CATEGORIES, ...customCategories].map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, category: cat })}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                          formData.category === cat 
-                            ? 'bg-[#22301f] text-white border-transparent shadow-sm' 
-                            : 'bg-white text-[#444841] border-[#c4c8bf] hover:bg-[#f5f3f0]'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                    
-                    {/* Inline Add Custom Category Button */}
-                    {!showNewCatInput && (
-                      <button
-                        type="button"
-                        onClick={() => setShowNewCatInput(true)}
-                        className="px-3 py-1.5 rounded-full text-xs font-bold border border-dashed border-[#22301f] bg-[#fbf9f6] text-[#22301f] hover:bg-[#eae8e5] active:scale-95 transition-all flex items-center gap-1"
-                      >
-                        <Plus size={12} /> Add Custom
-                      </button>
-                    )}
-                  </div>
+                    {/* Quantity and Price */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#546250]">Quantity</label>
+                        <div className="flex items-center w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-1 h-11">
+                          <button 
+                            type="button"
+                            onClick={() => setFormData({ ...formData, quantity: Math.max(1, formData.quantity - 1) })}
+                            className="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-[#f5f3f0] active:bg-[#eae8e5] text-[#546250] transition-colors"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <input 
+                            type="number"
+                            value={formData.quantity}
+                            readOnly
+                            className="flex-1 bg-transparent border-none text-center font-mono text-sm focus:ring-0 focus:outline-none text-[#0e1b0c]"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => setFormData({ ...formData, quantity: formData.quantity + 1 })}
+                            className="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-[#f5f3f0] active:bg-[#eae8e5] text-[#546250] transition-colors"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                      </div>
 
-                  {/* New Custom Category Input Field */}
-                  {showNewCatInput && (
-                    <div className="flex items-center gap-2 mt-2 bg-[#fbf9f6] border border-dashed border-[#c4c8bf] rounded-lg p-2 animate-fadeIn">
-                      <input
-                        type="text"
-                        placeholder="New category name (e.g. Dairy)"
-                        value={newCatName}
-                        onChange={(e) => setNewCatName(e.target.value)}
-                        className="flex-1 bg-transparent border-none p-1 focus:ring-0 text-xs focus:outline-none font-medium text-[#1b1c1a]"
-                        maxLength={30}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#546250]">Price (₹)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#546250]">₹</span>
+                          <input 
+                            type="number"
+                            placeholder="0.00"
+                            value={formData.price}
+                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                            className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 pl-7 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a] font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#546250]">Notes</label>
+                      <textarea 
+                        placeholder="Any additional storage details..."
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        rows={2}
+                        className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a]"
                       />
-                      <button
-                        type="button"
-                        onClick={handleAddCustomCategory}
-                        className="px-3 py-1.5 bg-[#22301f] text-white text-[11px] font-bold rounded hover:opacity-95 active:scale-95 transition-all"
-                      >
-                        Add
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowNewCatInput(false);
-                          setNewCatName('');
-                        }}
-                        className="px-2 py-1.5 text-[#747871] hover:text-[#0e1b0c] text-[11px] font-medium"
-                      >
-                        Cancel
-                      </button>
                     </div>
-                  )}
-                </div>
 
-                {/* Dates Grid (Manufactured Date and Expiry Date) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Manufactured Date (MFD) */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#546250] block">Manufacture Date (MFD) (Optional)</label>
-                    <div className="bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 flex items-center shadow-inner h-11">
-                      <div className="flex items-center gap-2 w-full">
-                        <Calendar className="text-[#546250]" size={16} />
-                        <input 
-                          type="date"
-                          value={formData.mfdDate}
-                          onChange={(e) => setFormData({ ...formData, mfdDate: e.target.value })}
-                          className="bg-transparent border-none p-0 focus:ring-0 text-xs font-mono text-[#0e1b0c] uppercase w-full focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Expiry Date (EXP) */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#546250] block">Expiry Date (EXP)</label>
-                    <div className="bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 flex items-center justify-between shadow-inner h-11">
-                      <div className="flex items-center gap-2 w-full">
-                        <Calendar className="text-[#546250]" size={16} />
-                        <input 
-                          type="date"
-                          value={formData.expiryDate}
-                          onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                          className="bg-transparent border-none p-0 focus:ring-0 text-xs font-mono text-[#0e1b0c] uppercase w-full focus:outline-none"
-                          required
-                        />
-                      </div>
-                      <div className="shrink-0 ml-1">
-                        {formData.expiryDate ? (
-                          <span className={`expiry-stamp text-[8px] py-0.5 px-1.5 font-bold ${getProximityInfo(formData.expiryDate).color}`}>
-                            {getProximityInfo(formData.expiryDate).text}
-                          </span>
-                        ) : (
-                          <span className="expiry-stamp text-[8px] py-0.5 px-1.5 text-[#747871] border-[#747871] opacity-60">
-                            REQUIRED
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quantity and Price */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#546250]">Quantity</label>
-                    <div className="flex items-center w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-1 h-11">
+                    {/* Submit button */}
+                    <div className="pt-2">
                       <button 
-                        type="button"
-                        onClick={() => setFormData({ ...formData, quantity: Math.max(1, formData.quantity - 1) })}
-                        className="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-[#f5f3f0] active:bg-[#eae8e5] text-[#546250] transition-colors"
+                        type="submit"
+                        className="w-full bg-[#22301f] text-white py-3 rounded-xl font-bold hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
                       >
-                        <Minus size={14} />
-                      </button>
-                      <input 
-                        type="number"
-                        value={formData.quantity}
-                        readOnly
-                        className="flex-1 bg-transparent border-none text-center font-mono text-sm focus:ring-0 focus:outline-none text-[#0e1b0c]"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => setFormData({ ...formData, quantity: formData.quantity + 1 })}
-                        className="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-[#f5f3f0] active:bg-[#eae8e5] text-[#546250] transition-colors"
-                      >
-                        <Plus size={14} />
+                        Save Product
+                        <ArrowRight size={18} />
                       </button>
                     </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#546250]">Price (₹)</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#546250]">₹</span>
-                      <input 
-                        type="number"
-                        placeholder="0.00"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                        className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 pl-7 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a] font-mono"
-                      />
-                    </div>
-                  </div>
+                  </form>
                 </div>
-
-                {/* Notes */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-[#546250]">Notes</label>
-                  <textarea 
-                    placeholder="Any additional storage details..."
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={2}
-                    className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-3 text-sm focus:border-[#22301f] focus:outline-none focus:ring-0 transition-all text-[#1b1c1a]"
-                  />
-                </div>
-
-                {/* Visual Suggested Tips Card */}
-                <div className="rounded-xl overflow-hidden shadow-ambient h-32 relative group mt-2 border border-[#eae8e5]">
-                  <img 
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
-                    src={CATEGORY_IMAGES['Visual Context'] || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDeZZp7-GCbeXbwzYkxWTh01iFfzQKMDVvxyHdo9GpXITDJ5P6A6hp5_khVG0ehAT-qUQgRaPX-hgEqaEBwDfJHqTsx-zzxJ4GHZVPP2qqetD3quVy7PBtIteWUzsW3vihvY4JIbHg2Slz5d_BIUVQJA3rZxvT2bpNfwwo09OLN3roZk4-servsgUTLaJyzNkzeMTgyq22QqM5X7_I_jfpvRBnxfmo61Vl_cAtnnEMtXN5Rd8XPwjcf604ai7h0aBlKLWobZ-h2E4w'} 
-                    alt="Pantry layouts"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-3 left-4">
-                    <span className="text-[9px] font-bold text-white tracking-widest font-mono">SUGGESTED FOR YOU</span>
-                    <p className="text-white text-sm font-space font-bold">Efficient Pantry Layouts</p>
-                  </div>
-                </div>
-
-                {/* Submit button */}
-                <div className="pt-2">
-                  <button 
-                    type="submit"
-                    className="w-full bg-[#22301f] text-white py-3 rounded-xl font-bold hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md"
-                  >
-                    Save Product
-                    <ArrowRight size={18} />
-                  </button>
-                </div>
-              </form>
+              </div>
             </motion.div>
           )}
 
@@ -1845,7 +1918,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="space-y-4"
+              className="space-y-5 max-w-5xl mx-auto"
             >
               {/* Header */}
               <div>
@@ -1864,245 +1937,210 @@ export default function App() {
                 }).length;
                 
                 // Saved calculation: products consumed fully
-                const savedTotal = wastedHistory.length * 110; // realistic simulation of saved money or calculate from history if available
+                const savedTotal = wastedHistory.length * 110;
 
                 return (
-                  <>
-                    {/* Wasted Hero Section */}
-                    {wastedTotal > 0 ? (
-                      <section className="text-center py-6 bg-white rounded-xl shadow-ambient border border-[#eae8e5] flex flex-col justify-center">
-                        <h2 className="font-space text-5xl font-extrabold text-[#D9483B]">₹{wastedTotal}</h2>
-                        <p className="text-[#546250] text-xs uppercase tracking-widest font-bold mt-1">Wasted in July</p>
-                      </section>
-                    ) : (
-                      /* Zero Waste Celebration Hero Section */
-                      <section className="text-center py-6 bg-white rounded-xl shadow-ambient border border-[#eae8e5] flex flex-col justify-center relative overflow-hidden">
-                        <div className="relative z-10 flex flex-col items-center">
-                          <div className="relative">
-                            <h2 className="font-space text-5xl font-extrabold text-[#3E9B4F]">₹0</h2>
-                            <Sparkles className="absolute -top-3 -right-6 text-[#3E9B4F] opacity-60" size={18} />
-                          </div>
-                          <p className="text-[#546250] text-xs uppercase tracking-widest font-bold mt-1">Wasted in July — keep it up</p>
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Summary Bento Grid */}
-                    <section className="grid grid-cols-2 gap-3">
-                      {/* Expiring Soon */}
-                      <div className="bg-white p-4 rounded-xl shadow-ambient border border-[#eae8e5] relative overflow-hidden group">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="p-2 bg-emerald-50 rounded-full">
-                            <Clock className="text-emerald-700" size={16} />
-                          </span>
-                        </div>
-                        <div className="font-mono text-3xl font-extrabold text-[#0e1b0c] mb-1">{soonExpiryCount}</div>
-                        <div className="text-xs text-[#546250] font-medium">Expiring Soon</div>
-                        <div className="absolute -right-2 -bottom-2 opacity-5">
-                          <AlertTriangle size={64} className="text-[#1b1c1a]" />
-                        </div>
-                      </div>
-
-                      {/* Wasted This Month count */}
-                      <div className="bg-white p-4 rounded-xl shadow-ambient border border-[#eae8e5] relative overflow-hidden group">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="p-2 bg-rose-50 rounded-full">
-                            <Trash2 className="text-[#D9483B]" size={16} />
-                          </span>
-                        </div>
-                        <div className="font-mono text-3xl font-extrabold text-[#0e1b0c] mb-1">
-                          {julyWasted.length < 10 ? `0${julyWasted.length}` : julyWasted.length}
-                        </div>
-                        <div className="text-xs text-[#546250] font-medium">Wasted This Month</div>
-                        <div className="absolute -right-2 -bottom-2 opacity-5">
-                          <Trash2 size={64} className="text-[#1b1c1a]" />
-                        </div>
-                      </div>
-
-                      {/* Savings Impact Bento Card */}
-                      <div className="col-span-2 bg-[#22301f] p-4 rounded-xl shadow-ambient flex flex-col justify-center text-white">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <CheckCircle className="text-emerald-400" size={16} />
-                          <span className="text-[10px] font-bold tracking-wider font-mono text-[#d8e7d0] uppercase">Estimated Loss Averted</span>
-                        </div>
-                        <div className="font-space text-2xl font-bold">
-                          ₹ {savedTotal > 0 ? savedTotal.toLocaleString('en-IN') : '1,450'}.00
-                        </div>
-                        <div className="mt-3 h-1 w-full bg-[#3c4b38] rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-400 w-3/4 rounded-full"></div>
-                        </div>
-                      </div>
-                    </section>
-
-                    {/* Expiry Outlook Custom Pixel Bar Chart */}
-                    <section className="bg-white p-5 rounded-xl shadow-ambient border border-[#eae8e5]">
-                      <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Expiry Outlook</h3>
-                        <div className="flex items-center gap-1 text-[10px] text-[#546250] bg-[#f5f3f0] px-2.5 py-1 rounded-full font-semibold">
-                          <span>Next 4 Weeks</span>
-                        </div>
-                      </div>
-                      
-                      <div className="h-44 flex items-end justify-between px-3 relative pt-4">
-                        {/* Y-Axis Mock Guide Lines */}
-                        <div className="absolute left-0 h-full w-full flex flex-col justify-between text-[8px] text-[#747871] font-mono opacity-40 pointer-events-none">
-                          <div className="border-b border-[#f5f3f0] w-full pb-1">20 items</div>
-                          <div className="border-b border-[#f5f3f0] w-full pb-1">15 items</div>
-                          <div className="border-b border-[#f5f3f0] w-full pb-1">10 items</div>
-                          <div className="border-b border-[#f5f3f0] w-full pb-1">5 items</div>
-                          <div>0</div>
-                        </div>
-
-                        {/* Chart Columns dynamically rendered */}
-                        {(() => {
-                          // Filter expiry by week count
-                          const getItemsExpiringInWeek = (weekNum: number) => {
-                            return products.filter(p => {
-                              const days = getProximityInfo(p.expiryDate).daysLeft;
-                              const start = (weekNum - 1) * 7;
-                              const end = weekNum * 7;
-                              return days >= start && days < end;
-                            }).length;
-                          };
-
-                          const w1 = getItemsExpiringInWeek(1) || soonExpiryCount || 2;
-                          const w2 = getItemsExpiringInWeek(2) || 4;
-                          const w3 = getItemsExpiringInWeek(3) || 7;
-                          const w4 = getItemsExpiringInWeek(4) || 1;
-
-                          const maxCount = 20;
-                          const getPercent = (count: number) => {
-                            return `${Math.min(100, Math.max(10, (count / maxCount) * 100))}%`;
-                          };
-
-                          return (
-                            <>
-                              <div className="flex flex-col items-center gap-2 z-10 w-1/5 group">
-                                <motion.div 
-                                  initial={{ height: 0 }} 
-                                  animate={{ height: getPercent(w1) }} 
-                                  className="w-full bg-[#D9483B] rounded-t-lg hover:opacity-90 transition-all duration-300 shadow-sm"
-                                />
-                                <span className="font-mono text-[9px] font-bold text-[#546250]">WEEK 1</span>
-                              </div>
-                              <div className="flex flex-col items-center gap-2 z-10 w-1/5 group">
-                                <motion.div 
-                                  initial={{ height: 0 }} 
-                                  animate={{ height: getPercent(w2) }} 
-                                  className="w-full bg-[#22301f] rounded-t-lg hover:opacity-90 transition-all duration-300 shadow-sm"
-                                />
-                                <span className="font-mono text-[9px] font-bold text-[#546250]">WEEK 2</span>
-                              </div>
-                              <div className="flex flex-col items-center gap-2 z-10 w-1/5 group">
-                                <motion.div 
-                                  initial={{ height: 0 }} 
-                                  animate={{ height: getPercent(w3) }} 
-                                  className="w-full bg-[#22301f] rounded-t-lg hover:opacity-90 transition-all duration-300 shadow-sm"
-                                />
-                                <span className="font-mono text-[9px] font-bold text-[#546250]">WEEK 3</span>
-                              </div>
-                              <div className="flex flex-col items-center gap-2 z-10 w-1/5 group">
-                                <motion.div 
-                                  initial={{ height: 0 }} 
-                                  animate={{ height: getPercent(w4) }} 
-                                  className="w-full bg-[#22301f] rounded-t-lg hover:opacity-90 transition-all duration-300 shadow-sm"
-                                />
-                                <span className="font-mono text-[9px] font-bold text-[#546250]">WEEK 4</span>
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </section>
-
-                    {/* Waste by category breakdown */}
-                    <section className="bg-white p-5 rounded-xl shadow-ambient border border-[#eae8e5]">
-                      <h3 className="font-space font-bold text-sm text-[#0e1b0c] mb-4">Waste by category</h3>
-                      <div className="space-y-3.5">
-                        {/* Food Progress */}
-                        <div>
-                          <div className="flex justify-between text-xs font-semibold mb-1">
-                            <span className="text-[#444841]">Food</span>
-                            <span className="font-mono">42%</span>
-                          </div>
-                          <div className="w-full bg-[#eae8e5] rounded-full h-2 overflow-hidden">
-                            <div className="bg-[#D9483B] h-full rounded-full" style={{ width: '42%' }}></div>
-                          </div>
-                        </div>
-                        {/* Medicine Progress */}
-                        <div>
-                          <div className="flex justify-between text-xs font-semibold mb-1">
-                            <span className="text-[#444841]">Medicine</span>
-                            <span className="font-mono">18%</span>
-                          </div>
-                          <div className="w-full bg-[#eae8e5] rounded-full h-2 overflow-hidden">
-                            <div className="bg-[#D9483B] opacity-60 h-full rounded-full" style={{ width: '18%' }}></div>
-                          </div>
-                        </div>
-                        {/* Cosmetics Progress */}
-                        <div>
-                          <div className="flex justify-between text-xs font-semibold mb-1">
-                            <span className="text-[#444841]">Cosmetics</span>
-                            <span className="font-mono">12%</span>
-                          </div>
-                          <div className="w-full bg-[#eae8e5] rounded-full h-2 overflow-hidden">
-                            <div className="bg-[#D9483B] opacity-40 h-full rounded-full" style={{ width: '12%' }}></div>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    {/* Wasted Items Recent List feed */}
-                    <section className="bg-white p-5 rounded-xl shadow-ambient border border-[#eae8e5]">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Recent Waste history</h3>
-                        <span className="text-[10px] uppercase font-bold tracking-wider font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">All time</span>
-                      </div>
-                      <div className="divide-y divide-[#eae8e5]/40 max-h-60 overflow-y-auto no-scrollbar">
-                        {wastedHistory.length === 0 ? (
-                          <p className="text-xs text-[#747871] py-4 text-center">Perfect zero-waste record!</p>
-                        ) : (
-                          wastedHistory.map((item) => (
-                            <div key={item.id} className="py-2.5 flex items-center justify-between">
-                              <div>
-                                <p className="text-xs font-bold text-[#1b1c1a]">{item.name}</p>
-                                <p className="text-[10px] text-[#747871] font-medium font-mono">{item.wastedDate}</p>
-                              </div>
-                              <div className="expiry-stamp px-2 py-0.5 text-red-600 border-red-600 rounded text-[10px] bg-red-50/50">
-                                ₹{item.price}
-                              </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column: Wasted Hero & Summary Cards */}
+                    <div className="lg:col-span-5 space-y-4">
+                      {/* Wasted Hero Section */}
+                      {wastedTotal > 0 ? (
+                        <section className="text-center py-6 bg-white rounded-xl shadow-ambient border border-[#eae8e5] flex flex-col justify-center">
+                          <h2 className="font-space text-5xl font-extrabold text-[#D9483B]">₹{wastedTotal}</h2>
+                          <p className="text-[#546250] text-xs uppercase tracking-widest font-bold mt-1">Wasted in July</p>
+                        </section>
+                      ) : (
+                        /* Zero Waste Celebration Hero Section */
+                        <section className="text-center py-6 bg-white rounded-xl shadow-ambient border border-[#eae8e5] flex flex-col justify-center relative overflow-hidden">
+                          <div className="relative z-10 flex flex-col items-center">
+                            <div className="relative">
+                              <h2 className="font-space text-5xl font-extrabold text-[#3E9B4F]">₹0</h2>
+                              <Sparkles className="absolute -top-3 -right-6 text-[#3E9B4F] opacity-60" size={18} />
                             </div>
-                          ))
-                        )}
-                      </div>
-                    </section>
+                            <p className="text-[#546250] text-xs uppercase tracking-widest font-bold mt-1">Wasted in July — keep it up</p>
+                          </div>
+                        </section>
+                      )}
 
-                    {/* verified zero waste stamp */}
-                    {wastedTotal === 0 && (
-                      <div className="flex justify-center pt-2">
-                        <div className="expiry-stamp px-5 py-2 border-[1.5px] border-[#3E9B4F] text-[#3E9B4F] text-[10px] font-bold tracking-widest bg-white">
-                          VERIFIED ZERO WASTE
+                      {/* Summary Bento Grid */}
+                      <section className="grid grid-cols-2 gap-3">
+                        {/* Expiring Soon */}
+                        <div className="bg-white p-4 rounded-xl shadow-ambient border border-[#eae8e5] relative overflow-hidden group">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="p-2 bg-emerald-50 rounded-full">
+                              <Clock className="text-emerald-700" size={16} />
+                            </span>
+                          </div>
+                          <div className="font-mono text-3xl font-extrabold text-[#0e1b0c] mb-1">{soonExpiryCount}</div>
+                          <div className="text-xs text-[#546250] font-medium">Expiring Soon</div>
+                          <div className="absolute -right-2 -bottom-2 opacity-5">
+                            <AlertTriangle size={64} className="text-[#1b1c1a]" />
+                          </div>
                         </div>
-                      </div>
-                    )}
 
-                    {/* Weekly Streak progress card */}
-                    <section className="bg-[#22301f] p-5 rounded-xl text-white relative overflow-hidden shadow-ambient">
-                      <div className="relative z-10 max-w-[240px] space-y-2">
-                        <h3 className="font-space text-base font-bold text-white leading-none">July Streak</h3>
-                        <p className="text-xs text-[#d8e7d0] leading-relaxed">
-                          You're on a 21-day streak of zero kitchen waste. Keep the momentum going!
-                        </p>
-                        <button 
-                          onClick={() => showToast("You are tracking everything efficiently!", "success")}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors shadow"
-                        >
-                          View Full History
-                        </button>
-                      </div>
-                      <Calendar className="absolute -bottom-4 -right-4 text-[#eae8e5]/10" size={120} />
-                    </section>
-                  </>
+                        {/* Wasted This Month count */}
+                        <div className="bg-white p-4 rounded-xl shadow-ambient border border-[#eae8e5] relative overflow-hidden group">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="p-2 bg-rose-50 rounded-full">
+                              <Trash2 className="text-[#D9483B]" size={16} />
+                            </span>
+                          </div>
+                          <div className="font-mono text-3xl font-extrabold text-[#0e1b0c] mb-1">
+                            {julyWasted.length < 10 ? `0${julyWasted.length}` : julyWasted.length}
+                          </div>
+                          <div className="text-xs text-[#546250] font-medium">Wasted This Month</div>
+                          <div className="absolute -right-2 -bottom-2 opacity-5">
+                            <Trash2 size={64} className="text-[#1b1c1a]" />
+                          </div>
+                        </div>
+
+                        {/* Savings Impact Bento Card */}
+                        <div className="col-span-2 bg-[#22301f] p-4 rounded-xl shadow-ambient flex flex-col justify-center text-white">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <CheckCircle className="text-emerald-400" size={16} />
+                            <span className="text-[10px] font-bold tracking-wider font-mono text-[#d8e7d0] uppercase">Estimated Loss Averted</span>
+                          </div>
+                          <div className="font-space text-2xl font-bold">
+                            ₹ {savedTotal > 0 ? savedTotal.toLocaleString('en-IN') : '1,450'}.00
+                          </div>
+                          <div className="mt-3 h-1 w-full bg-[#3c4b38] rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-400 w-3/4 rounded-full"></div>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Weekly Streak progress card */}
+                      <section className="bg-[#22301f] p-5 rounded-xl text-white relative overflow-hidden shadow-ambient">
+                        <div className="relative z-10 max-w-[240px] space-y-2">
+                          <h3 className="font-space text-base font-bold text-white leading-none">July Streak</h3>
+                          <p className="text-xs text-[#d8e7d0] leading-relaxed">
+                            You're on a 21-day streak of zero kitchen waste. Keep the momentum going!
+                          </p>
+                          <button 
+                            onClick={() => showToast("You are tracking everything efficiently!", "success")}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors shadow cursor-pointer"
+                          >
+                            View Full History
+                          </button>
+                        </div>
+                        <Calendar className="absolute -bottom-4 -right-4 text-[#eae8e5]/10" size={120} />
+                      </section>
+                    </div>
+
+                    {/* Right Column: Expiry Outlook & Waste History */}
+                    <div className="lg:col-span-7 space-y-4">
+                      {/* Expiry Outlook Custom Pixel Bar Chart */}
+                      <section className="bg-white p-5 rounded-xl shadow-ambient border border-[#eae8e5]">
+                        <div className="flex justify-between items-center mb-6">
+                          <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Expiry Outlook</h3>
+                          <div className="flex items-center gap-1 text-[10px] text-[#546250] bg-[#f5f3f0] px-2.5 py-1 rounded-full font-semibold">
+                            <span>Next 4 Weeks</span>
+                          </div>
+                        </div>
+                        
+                        <div className="h-44 flex items-end justify-between px-3 relative pt-4">
+                          {/* Y-Axis Mock Guide Lines */}
+                          <div className="absolute left-0 h-full w-full flex flex-col justify-between text-[8px] text-[#747871] font-mono opacity-40 pointer-events-none">
+                            <div className="border-b border-[#f5f3f0] w-full pb-1">20 items</div>
+                            <div className="border-b border-[#f5f3f0] w-full pb-1">15 items</div>
+                            <div className="border-b border-[#f5f3f0] w-full pb-1">10 items</div>
+                            <div className="border-b border-[#f5f3f0] w-full pb-1">5 items</div>
+                            <div className="border-b border-[#f5f3f0] w-full">0</div>
+                          </div>
+
+                          {/* Bar 1 */}
+                          <div className="flex flex-col items-center gap-2 z-10 w-12 group">
+                            <div className="text-[10px] font-mono font-bold text-[#D9483B] opacity-0 group-hover:opacity-100 transition-opacity">
+                              {soonExpiryCount > 0 ? soonExpiryCount : 3}
+                            </div>
+                            <div className="w-8 bg-[#f5f3f0] h-32 rounded-t-sm flex items-end overflow-hidden p-0.5">
+                              <div 
+                                className="w-full bg-[#D9483B] rounded-t-xs transition-all duration-500" 
+                                style={{ height: `${Math.min(100, Math.max(25, soonExpiryCount * 25))}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-[9px] text-[#747871] font-bold">W1</span>
+                          </div>
+
+                          {/* Bar 2 */}
+                          <div className="flex flex-col items-center gap-2 z-10 w-12 group">
+                            <div className="text-[10px] font-mono font-bold text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {Math.max(1, Math.floor(products.length * 0.4))}
+                            </div>
+                            <div className="w-8 bg-[#f5f3f0] h-32 rounded-t-sm flex items-end overflow-hidden p-0.5">
+                              <div 
+                                className="w-full bg-amber-500 rounded-t-xs transition-all duration-500" 
+                                style={{ height: `${Math.min(100, Math.max(35, products.length * 15))}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-[9px] text-[#747871] font-bold">W2</span>
+                          </div>
+
+                          {/* Bar 3 */}
+                          <div className="flex flex-col items-center gap-2 z-10 w-12 group">
+                            <div className="text-[10px] font-mono font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {Math.max(2, Math.floor(products.length * 0.3))}
+                            </div>
+                            <div className="w-8 bg-[#f5f3f0] h-32 rounded-t-sm flex items-end overflow-hidden p-0.5">
+                              <div 
+                                className="w-full bg-emerald-600 rounded-t-xs transition-all duration-500" 
+                                style={{ height: `${Math.min(100, Math.max(20, products.length * 12))}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-[9px] text-[#747871] font-bold">W3</span>
+                          </div>
+
+                          {/* Bar 4 */}
+                          <div className="flex flex-col items-center gap-2 z-10 w-12 group">
+                            <div className="text-[10px] font-mono font-bold text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {Math.max(1, Math.floor(products.length * 0.2))}
+                            </div>
+                            <div className="w-8 bg-[#f5f3f0] h-32 rounded-t-sm flex items-end overflow-hidden p-0.5">
+                              <div 
+                                className="w-full bg-emerald-700 rounded-t-xs transition-all duration-500" 
+                                style={{ height: `${Math.min(100, Math.max(15, products.length * 8))}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-[9px] text-[#747871] font-bold">W4</span>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Waste History Log section */}
+                      <section className="bg-white p-5 rounded-xl shadow-ambient border border-[#eae8e5] space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Wasted History Log</h3>
+                          <span className="text-[10px] uppercase font-bold tracking-wider font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">All time</span>
+                        </div>
+                        <div className="divide-y divide-[#eae8e5]/40 max-h-60 overflow-y-auto no-scrollbar">
+                          {wastedHistory.length === 0 ? (
+                            <p className="text-xs text-[#747871] py-4 text-center">Perfect zero-waste record!</p>
+                          ) : (
+                            wastedHistory.map((item) => (
+                              <div key={item.id} className="py-2.5 flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs font-bold text-[#1b1c1a]">{item.name}</p>
+                                  <p className="text-[10px] text-[#747871] font-medium font-mono">{item.wastedDate}</p>
+                                </div>
+                                <div className="expiry-stamp px-2 py-0.5 text-red-600 border-red-600 rounded text-[10px] bg-red-50/50">
+                                  ₹{item.price}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </section>
+
+                      {/* verified zero waste stamp */}
+                      {wastedTotal === 0 && (
+                        <div className="flex justify-center pt-2">
+                          <div className="expiry-stamp px-5 py-2 border-[1.5px] border-[#3E9B4F] text-[#3E9B4F] text-[10px] font-bold tracking-widest bg-white">
+                            VERIFIED ZERO WASTE
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 );
               })()}
             </motion.div>
@@ -2116,15 +2154,16 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="space-y-4"
+              className="space-y-5 max-w-4xl mx-auto"
             >
               {/* Header */}
               <div>
                 <h2 className="font-space text-2xl font-bold text-[#0e1b0c]">Settings</h2>
+                <p className="text-[#546250] text-xs mt-1">Manage sync, AI keys, and local storage.</p>
               </div>
 
               {/* Profile Card */}
-              <section className="bg-white rounded-xl p-4 shadow-ambient border border-[#eae8e5] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <section className="bg-white rounded-xl p-5 shadow-ambient border border-[#eae8e5] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#eae8e5] bg-[#f0eeea] shrink-0">
                     <img 
@@ -2138,7 +2177,7 @@ export default function App() {
                     <h3 className="font-space font-bold text-base text-[#0e1b0c] leading-snug">
                       {user ? user.displayName : 'Guest User'}
                     </h3>
-                    <p className="text-xs text-[#546250] truncate max-w-[200px]">
+                    <p className="text-xs text-[#546250] truncate max-w-[240px]">
                       {user ? user.email : 'Local Storage Mode'}
                     </p>
                     <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full mt-1 ${
@@ -2170,56 +2209,11 @@ export default function App() {
                 </div>
               </section>
 
-              {/* Gemini API key input */}
-              <section className="bg-white rounded-xl p-5 shadow-ambient border border-[#eae8e5] space-y-4">
-                <div>
-                  <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Gemini API key</h3>
-                  <p className="text-[#546250] text-[10px] mt-0.5 leading-relaxed">Required for Gemini AI product scanning features.</p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter Gemini API key..."
-                      value={settings.geminiApiKey}
-                      onChange={(e) => saveSettings({ ...settings, geminiApiKey: e.target.value })}
-                      className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg px-3 py-2.5 text-xs font-mono focus:border-[#22301f] focus:outline-none transition-all pr-10"
-                    />
-                    <button 
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#747871] hover:text-[#0e1b0c]"
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <button 
-                      type="button"
-                      onClick={testGeminiKey}
-                      disabled={testingApiKey === 'testing'}
-                      className={`px-4 py-2 border rounded-full text-xs font-bold transition-all duration-150 ${
-                        testingApiKey === 'testing' 
-                          ? 'bg-[#eae8e5] text-[#747871] border-transparent cursor-not-allowed' 
-                          : testingApiKey === 'success'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          : 'bg-white text-[#546250] border-[#c4c8bf] hover:bg-[#f5f3f0]'
-                      }`}
-                    >
-                      {testingApiKey === 'testing' ? 'Testing...' : testingApiKey === 'success' ? 'Verified!' : 'Test key'}
-                    </button>
-                    <p className="text-[10px] text-[#747871] font-medium italic">Stored locally on your browser</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Backup list options */}
-              <section className="bg-white rounded-xl p-5 shadow-ambient border border-[#eae8e5] space-y-4">
-                <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Backup</h3>
-                
-                <div className="space-y-2">
+              {/* Data Backup & Sync */}
+              <section className="bg-white rounded-xl p-5 shadow-ambient border border-[#eae8e5] space-y-3">
+                <h3 className="font-space font-bold text-sm text-[#0e1b0c]">Data Backup & Sync</h3>
+                <p className="text-xs text-[#546250]">Export your database to a backup JSON file or restore your products anytime.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                   {/* Export */}
                   <button 
                     onClick={handleExportData}
@@ -2227,7 +2221,7 @@ export default function App() {
                   >
                     <span className="flex items-center gap-3">
                       <Download size={16} className="text-[#747871]" />
-                      Export data (JSON)
+                      Export database (.json)
                     </span>
                     <ArrowRight size={14} className="text-[#747871]" />
                   </button>
@@ -2334,19 +2328,19 @@ export default function App() {
 
       </main>
 
-      {/* Floating Action Button (FAB) (Hidden on Settings, Stats and Add Product Tab to match guidelines) */}
+      {/* Floating Action Button (FAB) (Hidden on Settings, Stats and Add Product Tab to match guidelines, and hidden on desktop) */}
       {activeTab === 'home' && products.length > 0 && (
         <button 
           onClick={() => setActiveTab('add')}
-          className="fixed bottom-24 right-6 w-14 h-14 bg-[#3E9B4F] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer"
+          className="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-[#3E9B4F] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer"
           id="add-fab-btn"
         >
           <Plus size={32} />
         </button>
       )}
 
-      {/* Bottom Safe Area Navigation Menu */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 bg-white border-t border-[#eae8e5] flex justify-around items-center h-20 pb-safe">
+      {/* Bottom Safe Area Navigation Menu (Mobile only) */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-white border-t border-[#eae8e5] flex justify-around items-center h-20 pb-safe">
         
         {/* Home */}
         <button 
