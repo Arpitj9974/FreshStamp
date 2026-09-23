@@ -35,10 +35,13 @@ import {
   ImagePlus,
   Edit2,
   RefreshCw,
-  Smartphone
+  Smartphone,
+  RotateCcw,
+  Undo2,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Product, AppSettings, Category } from './types';
+import { Product, AppSettings, Category, RemovedItem } from './types';
 import { getSeedProducts, getSeedWastedHistory, WastedItem } from './data';
 import { auth, db, googleProvider } from './lib/firebase';
 import { 
@@ -143,6 +146,7 @@ export default function App() {
   // Products and Waste states
   const [products, setProducts] = useState<Product[]>([]);
   const [wastedHistory, setWastedHistory] = useState<WastedItem[]>([]);
+  const [removedHistory, setRemovedHistory] = useState<RemovedItem[]>([]);
 
   // Filters and Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -286,6 +290,13 @@ export default function App() {
       setCustomCategories([]);
       localStorage.setItem('freshstamp_categories', JSON.stringify([]));
     }
+
+    const storedRemoved = localStorage.getItem('freshstamp_removed_history');
+    if (storedRemoved) {
+      setRemovedHistory(JSON.parse(storedRemoved));
+    } else {
+      setRemovedHistory([]);
+    }
   };
 
   // Helper to load cloud data from Firestore
@@ -409,6 +420,7 @@ export default function App() {
       // Clear current state immediately during auth transitions to avoid stale visual data/leak
       setProducts([]);
       setWastedHistory([]);
+      setRemovedHistory([]);
       setCustomCategories([]);
       
       setUser(currentUser);
@@ -440,6 +452,52 @@ export default function App() {
       localStorage.setItem(`freshstamp_wasted_history_${auth.currentUser.uid}`, JSON.stringify(updatedWasted));
     } else {
       localStorage.setItem('freshstamp_wasted_history', JSON.stringify(updatedWasted));
+    }
+  };
+
+  const saveRemovedHistory = (updatedRemoved: RemovedItem[]) => {
+    setRemovedHistory(updatedRemoved);
+    if (auth.currentUser) {
+      localStorage.setItem(`freshstamp_removed_history_${auth.currentUser.uid}`, JSON.stringify(updatedRemoved));
+    } else {
+      localStorage.setItem('freshstamp_removed_history', JSON.stringify(updatedRemoved));
+    }
+  };
+
+  const handleRevokeProduct = async (recordId: string) => {
+    const record = removedHistory.find(r => r.id === recordId);
+    if (!record) return;
+
+    const restoredProduct: Product = {
+      ...record.originalProduct,
+      id: record.originalProduct.id || `prod-${Date.now()}`,
+      quantity: Math.max(1, record.originalProduct.quantity || 1),
+      isUsed: false,
+      isWasted: false,
+      usedDate: undefined,
+      wastedDate: undefined
+    };
+
+    const newProducts = [restoredProduct, ...products];
+    saveProducts(newProducts);
+
+    const updatedRemoved = removedHistory.filter(r => r.id !== recordId);
+    saveRemovedHistory(updatedRemoved);
+
+    if (auth.currentUser) {
+      setDoc(doc(db, 'users', auth.currentUser.uid, 'products', restoredProduct.id), restoredProduct)
+        .catch(err => console.error("Cloud restore product error:", err));
+      deleteDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', recordId))
+        .catch(err => console.error("Cloud delete removed history error:", err));
+    }
+
+    showToast(`Restored "${restoredProduct.name}" back to shelf!`, 'success');
+  };
+
+  const handleClearRemovedHistory = () => {
+    if (confirm("Are you sure you want to clear the removed items archive?")) {
+      saveRemovedHistory([]);
+      showToast("Cleared removed items archive.", "info");
     }
   };
 
@@ -626,13 +684,25 @@ export default function App() {
     if (targetProduct) {
       const updatedProduct = updated.find(p => p.id === id)!;
       if (targetProduct.quantity <= 1) {
-        showToast(`Fully consumed ${targetProduct.name}! Saved ₹${targetProduct.price}!`, 'success');
+        showToast(`Fully consumed ${targetProduct.name}! (Can revoke in Settings)`, 'success');
         saveProducts(updated.filter(p => p.quantity > 0));
         
-        // Cloud delete
+        // Add to removedHistory archive for revoking
+        const removedRecord: RemovedItem = {
+          id: `removed-${Date.now()}-${targetProduct.id}`,
+          originalProduct: { ...targetProduct, quantity: 1 },
+          removedAt: new Date().toISOString(),
+          reason: 'consumed'
+        };
+        const updatedRemoved = [removedRecord, ...removedHistory];
+        saveRemovedHistory(updatedRemoved);
+
+        // Cloud delete and record archive
         if (auth.currentUser) {
           deleteDoc(doc(db, 'users', auth.currentUser.uid, 'products', id))
             .catch(err => console.error("Cloud delete product error:", err));
+          setDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', removedRecord.id), removedRecord)
+            .catch(err => console.error("Cloud add removed record error:", err));
         }
       } else {
         showToast(`Consumed 1 unit of ${targetProduct.name}.`, 'info');
@@ -662,7 +732,18 @@ export default function App() {
 
       saveWastedHistory([newWasted, ...wastedHistory]);
       saveProducts(products.filter(p => p.id !== id));
-      showToast(`${item.name} removed and marked as waste.`, 'error');
+
+      // Add to removedHistory archive for revoking
+      const removedRecord: RemovedItem = {
+        id: `removed-${Date.now()}-${item.id}`,
+        originalProduct: item,
+        removedAt: todayStr,
+        reason: 'wasted'
+      };
+      const updatedRemoved = [removedRecord, ...removedHistory];
+      saveRemovedHistory(updatedRemoved);
+
+      showToast(`${item.name} removed and marked as waste. (Can revoke in Settings)`, 'error');
 
       // Cloud operations
       if (auth.currentUser) {
@@ -672,6 +753,9 @@ export default function App() {
         // Add to wasted collection
         setDoc(doc(db, 'users', auth.currentUser.uid, 'wastedHistory', newWasted.id), newWasted)
           .catch(err => console.error("Cloud add wasted item error:", err));
+        // Add to removedHistory archive
+        setDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', removedRecord.id), removedRecord)
+          .catch(err => console.error("Cloud add removed record error:", err));
       }
     }
   };
@@ -1605,19 +1689,19 @@ export default function App() {
                             })()}
                           </div>
 
-                          {/* Action buttons section */}
-                          <div className="flex gap-2 mt-4 border-t border-[#f5f3f0] pt-3">
+                          {/* Action buttons section (Compact layout to prevent accidental clicks) */}
+                          <div className="flex items-center justify-between gap-2 mt-4 border-t border-[#f5f3f0] pt-3">
                             {prox.isExpired ? (
-                              <div className="flex items-center gap-2 w-full">
+                              <div className="flex items-center justify-between w-full">
                                 <button
                                   onClick={() => handleMarkWasted(p.id)}
-                                  className="flex-1 py-2 border border-[#D9483B] rounded-lg text-xs font-semibold text-[#D9483B] bg-red-50 hover:bg-red-100 transition-colors active:scale-[0.98] duration-150 flex items-center justify-center gap-1"
+                                  className="px-3.5 py-1.5 border border-[#D9483B] rounded-lg text-xs font-semibold text-[#D9483B] bg-red-50 hover:bg-red-100 transition-colors active:scale-[0.98] duration-150 flex items-center gap-1.5 cursor-pointer"
                                 >
-                                  <Trash2 size={14} /> Remove Item
+                                  <Trash2 size={13} /> Remove Item
                                 </button>
                                 <button
                                   onClick={() => handleStartEditProduct(p)}
-                                  className="px-3 py-2 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98]"
+                                  className="px-3 py-1.5 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98] cursor-pointer"
                                   title="Edit Product / Photo"
                                 >
                                   <Edit2 size={14} />
@@ -1625,26 +1709,32 @@ export default function App() {
                               </div>
                             ) : (
                               <>
+                                {/* Compact, comfortable Use 1 button */}
                                 <button
                                   onClick={() => handleUseProduct(p.id)}
-                                  className="flex-1 py-2 border border-[#747871] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] transition-colors active:scale-[0.98] duration-150"
+                                  className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[#22301f] bg-[#eef6ec] border border-[#bcdcb8] hover:bg-[#e1f0de] active:scale-95 transition-all duration-150 flex items-center gap-1.5 shadow-xs cursor-pointer"
+                                  title="Consume 1 unit of this product"
                                 >
-                                  Use 1
+                                  <Check size={13} className="text-[#3E9B4F] stroke-[2.5]" />
+                                  <span>Use 1</span>
                                 </button>
-                                <button
-                                  onClick={() => handleStartEditProduct(p)}
-                                  className="px-3 py-2 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98]"
-                                  title="Edit Product / Photo"
-                                >
-                                  <Edit2 size={14} />
-                                </button>
-                                <button
-                                  onClick={() => handleMarkWasted(p.id)}
-                                  className="px-3 py-2 border border-dashed border-[#c4c8bf] rounded-lg text-xs font-semibold text-[#747871] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all active:scale-[0.98]"
-                                  title="Mark as Waste"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
+                                
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => handleStartEditProduct(p)}
+                                    className="px-2.5 py-1.5 border border-[#eae8e5] rounded-lg text-xs font-semibold text-[#546250] hover:bg-[#f5f3f0] hover:text-[#0e1b0c] transition-all active:scale-[0.98] cursor-pointer"
+                                    title="Edit Product / Photo"
+                                  >
+                                    <Edit2 size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleMarkWasted(p.id)}
+                                    className="px-2.5 py-1.5 border border-dashed border-[#c4c8bf] rounded-lg text-xs font-semibold text-[#747871] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all active:scale-[0.98] cursor-pointer"
+                                    title="Mark as Waste"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
                               </>
                             )}
                           </div>
@@ -2351,6 +2441,89 @@ export default function App() {
                     </button>
                   </div>
                 </div>
+              </section>
+
+              {/* Removed & Consumed Items (Revoke / Restore) */}
+              <section className="bg-white rounded-xl p-5 shadow-ambient border border-[#eae8e5] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-space font-bold text-sm text-[#0e1b0c] flex items-center gap-2">
+                      <RotateCcw size={16} className="text-[#3E9B4F]" />
+                      <span>Removed & Consumed Items</span>
+                      {removedHistory.length > 0 && (
+                        <span className="bg-[#eae8e5] text-[#1b1c1a] text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
+                          {removedHistory.length}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-xs text-[#546250] mt-0.5">Revoke and restore recently consumed or removed items back to your shelf.</p>
+                  </div>
+                  {removedHistory.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearRemovedHistory}
+                      className="text-[11px] font-medium text-[#747871] hover:text-rose-600 transition-colors cursor-pointer"
+                    >
+                      Clear Archive
+                    </button>
+                  )}
+                </div>
+
+                {removedHistory.length === 0 ? (
+                  <div className="py-6 text-center border border-dashed border-[#c4c8bf] rounded-xl bg-[#fbf9f6] p-4">
+                    <p className="text-xs text-[#546250] font-medium">No removed items in archive.</p>
+                    <p className="text-[10px] text-[#747871] mt-1">When products are fully consumed or marked as waste, they appear here so you can easily restore them anytime.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1 no-scrollbar">
+                    {removedHistory.map((item) => {
+                      const orig = item.originalProduct;
+                      const img = orig.imageUrl || DEFAULT_PRODUCT_IMAGE;
+                      const isConsumed = item.reason === 'consumed';
+
+                      return (
+                        <div 
+                          key={item.id}
+                          className="flex items-center justify-between p-3 rounded-xl border border-[#eae8e5] bg-[#fdfdfc] hover:bg-white transition-all shadow-xs gap-3"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-11 h-11 rounded-lg overflow-hidden border border-[#eae8e5] bg-[#f0eeea] shrink-0">
+                              <img 
+                                src={img} 
+                                alt={orig.name} 
+                                className="w-full h-full object-cover" 
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE; }}
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-space font-bold text-xs text-[#0e1b0c] truncate">{orig.name}</h4>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                  isConsumed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                }`}>
+                                  {isConsumed ? 'Consumed' : 'Discarded'}
+                                </span>
+                                <span className="text-[10px] text-[#747871] font-mono">
+                                  EXP: {formatDateToReadable(orig.expiryDate)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeProduct(item.id)}
+                            className="px-3 py-1.5 bg-[#22301f] text-white hover:bg-opacity-90 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                            title="Restore this item to Tracked Products"
+                          >
+                            <RotateCcw size={12} />
+                            <span>Revoke / Restore</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
 
               {/* Notification & Reminders Settings */}

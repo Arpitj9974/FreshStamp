@@ -31,3 +31,10 @@ export interface AppSettings {
   username: string;
   userEmail: string;
 }
+
+export interface RemovedItem {
+  id: string;
+  originalProduct: Product;
+  removedAt: string; // ISO date string
+  reason: 'consumed' | 'wasted';
+}
