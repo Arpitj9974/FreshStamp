@@ -177,7 +177,7 @@ export default function App() {
     category: 'Grocery' as Category,
     expiryDate: '',
     mfdDate: '',
-    quantity: 1,
+    quantity: 1 as number | string,
     price: '',
     notes: '',
     imageUrl: ''
@@ -191,7 +191,7 @@ export default function App() {
     category: 'Grocery' as Category,
     expiryDate: '',
     mfdDate: '',
-    quantity: 1,
+    quantity: 1 as number | string,
     price: '',
     notes: '',
     imageUrl: ''
@@ -910,6 +910,7 @@ export default function App() {
       return;
     }
 
+    const finalQuantity = Math.max(1, parseInt(String(editFormData.quantity), 10) || 1);
     const updatedList = products.map(p => {
       if (p.id === editingProduct.id) {
         return {
@@ -919,7 +920,7 @@ export default function App() {
           category: editFormData.category,
           expiryDate: editFormData.expiryDate,
           mfdDate: editFormData.mfdDate || undefined,
-          quantity: editFormData.quantity,
+          quantity: finalQuantity,
           price: editFormData.price ? parseFloat(editFormData.price) : 0,
           notes: editFormData.notes || undefined,
           imageUrl: editFormData.imageUrl?.trim() || undefined
@@ -953,6 +954,7 @@ export default function App() {
       return;
     }
 
+    const finalQuantity = Math.max(1, parseInt(String(formData.quantity), 10) || 1);
     const newProduct: Product = {
       id: `prod-${Date.now()}`,
       name: formData.name,
@@ -960,8 +962,8 @@ export default function App() {
       category: formData.category,
       expiryDate: formData.expiryDate,
       mfdDate: formData.mfdDate || undefined,
-      quantity: formData.quantity,
-      initialQuantity: formData.quantity,
+      quantity: finalQuantity,
+      initialQuantity: finalQuantity,
       usedCount: 0,
       price: formData.price ? parseFloat(formData.price) : 0,
       notes: formData.notes || undefined,
@@ -2179,26 +2181,57 @@ export default function App() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-[#546250]">Quantity</label>
-                        <div className="flex items-center w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-1 h-11">
+                        <div className="flex items-center justify-between w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-1 h-11 shadow-inner">
                           <button 
                             type="button"
-                            onClick={() => setFormData({ ...formData, quantity: Math.max(1, formData.quantity - 1) })}
-                            className="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-[#f5f3f0] active:bg-[#eae8e5] text-[#546250] transition-colors"
+                            onClick={() => {
+                              const current = parseInt(String(formData.quantity), 10) || 1;
+                              setFormData({ ...formData, quantity: Math.max(1, current - 1) });
+                            }}
+                            className="w-8 h-8 shrink-0 flex items-center justify-center rounded-md bg-white border border-[#c4c8bf]/70 shadow-xs hover:bg-[#f5f3f0] active:scale-95 text-[#22301f] transition-all cursor-pointer"
+                            aria-label="Decrease quantity"
+                            title="Decrease quantity"
                           >
-                            <Minus size={14} />
+                            <Minus size={15} strokeWidth={2.5} />
                           </button>
                           <input 
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="1"
                             value={formData.quantity}
-                            readOnly
-                            className="flex-1 bg-transparent border-none text-center font-mono text-sm focus:ring-0 focus:outline-none text-[#0e1b0c]"
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === '') {
+                                setFormData({ ...formData, quantity: '' });
+                              } else {
+                                const cleaned = val.replace(/\D/g, '');
+                                if (cleaned === '') {
+                                  setFormData({ ...formData, quantity: '' });
+                                } else {
+                                  setFormData({ ...formData, quantity: parseInt(cleaned, 10) });
+                                }
+                              }
+                            }}
+                            onBlur={() => {
+                              if (!formData.quantity || Number(formData.quantity) < 1) {
+                                setFormData({ ...formData, quantity: 1 });
+                              }
+                            }}
+                            className="min-w-0 flex-1 bg-transparent border-none text-center font-mono font-bold text-sm focus:ring-0 focus:outline-none text-[#0e1b0c]"
                           />
                           <button 
                             type="button"
-                            onClick={() => setFormData({ ...formData, quantity: formData.quantity + 1 })}
-                            className="w-8 h-8 flex items-center justify-center rounded bg-white hover:bg-[#f5f3f0] active:bg-[#eae8e5] text-[#546250] transition-colors"
+                            onClick={() => {
+                              const current = parseInt(String(formData.quantity), 10) || 0;
+                              setFormData({ ...formData, quantity: current + 1 });
+                            }}
+                            className="w-8 h-8 shrink-0 flex items-center justify-center rounded-md bg-white border border-[#c4c8bf]/70 shadow-xs hover:bg-[#f5f3f0] active:scale-95 text-[#22301f] transition-all cursor-pointer"
+                            aria-label="Increase quantity"
+                            title="Increase quantity"
                           >
-                            <Plus size={14} />
+                            <Plus size={15} strokeWidth={2.5} />
                           </button>
                         </div>
                       </div>
@@ -3109,13 +3142,59 @@ export default function App() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-[#546250]">Quantity</label>
-                  <input 
-                    type="number"
-                    min="1"
-                    value={editFormData.quantity}
-                    onChange={(e) => setEditFormData({ ...editFormData, quantity: Math.max(1, parseInt(e.target.value, 10) || 1) })}
-                    className="w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-2.5 text-xs text-[#1b1c1a] font-mono focus:outline-none focus:border-[#22301f]"
-                  />
+                  <div className="flex items-center justify-between w-full bg-[#fbf9f6] border border-[#c4c8bf] rounded-lg p-1 h-10 shadow-inner">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const current = parseInt(String(editFormData.quantity), 10) || 1;
+                        setEditFormData({ ...editFormData, quantity: Math.max(1, current - 1) });
+                      }}
+                      className="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-white border border-[#c4c8bf]/70 shadow-xs hover:bg-[#f5f3f0] active:scale-95 text-[#22301f] transition-all cursor-pointer"
+                      aria-label="Decrease quantity"
+                      title="Decrease quantity"
+                    >
+                      <Minus size={14} strokeWidth={2.5} />
+                    </button>
+                    <input 
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="1"
+                      value={editFormData.quantity}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setEditFormData({ ...editFormData, quantity: '' });
+                        } else {
+                          const cleaned = val.replace(/\D/g, '');
+                          if (cleaned === '') {
+                            setEditFormData({ ...editFormData, quantity: '' });
+                          } else {
+                            setEditFormData({ ...editFormData, quantity: parseInt(cleaned, 10) });
+                          }
+                        }
+                      }}
+                      onBlur={() => {
+                        if (!editFormData.quantity || Number(editFormData.quantity) < 1) {
+                          setEditFormData({ ...editFormData, quantity: 1 });
+                        }
+                      }}
+                      className="min-w-0 flex-1 bg-transparent border-none text-center font-mono font-bold text-xs focus:ring-0 focus:outline-none text-[#0e1b0c]"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const current = parseInt(String(editFormData.quantity), 10) || 0;
+                        setEditFormData({ ...editFormData, quantity: current + 1 });
+                      }}
+                      className="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-white border border-[#c4c8bf]/70 shadow-xs hover:bg-[#f5f3f0] active:scale-95 text-[#22301f] transition-all cursor-pointer"
+                      aria-label="Increase quantity"
+                      title="Increase quantity"
+                    >
+                      <Plus size={14} strokeWidth={2.5} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
