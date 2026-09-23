@@ -1380,7 +1380,7 @@ export default function App() {
                 {/* Logo with Optical Laser Scanner Line */}
                 <div className="relative overflow-hidden py-1 px-2">
                   <motion.img
-                    src="/logo-with-freshstamp-name.png?v=1.0.2"
+                    src="/logo-with-freshstamp-name.png?v=1.0.3"
                     alt="FreshStamp"
                     initial={{ scale: 0.88, opacity: 0, y: 14 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
