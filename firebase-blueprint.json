@@ -58,6 +58,18 @@
         "name": { "type": "string" }
       },
       "required": ["id", "name"]
+    },
+    "RemovedItem": {
+      "title": "RemovedItem",
+      "description": "An archived product that was fully consumed or wasted, eligible for revoke/restore.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "originalProduct": { "type": "object" },
+        "removedAt": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "required": ["id", "originalProduct", "removedAt", "reason"]
     }
   },
   "firestore": {
@@ -76,6 +88,10 @@
     "/users/{userId}/categories/{categoryId}": {
       "schema": "CustomCategory",
       "description": "Custom categories created by a specific user."
+    },
+    "/users/{userId}/removedHistory/{removedId}": {
+      "schema": "RemovedItem",
+      "description": "Archived removed/consumed products for revoking."
     }
   }
 }

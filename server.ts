@@ -69,27 +69,39 @@ Return the result STRICTLY as a JSON object matching this schema:
   "notes": string
 }`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: mimeType
-            }
-          },
-          prompt
-        ],
-        config: {
-          responseMimeType: "application/json"
-        }
-      });
+      const candidateModels = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"];
+      let response: any = null;
+      let lastModelError: any = null;
 
-      const resultText = response.text;
-      if (!resultText) {
-        throw new Error("No response text from Gemini");
+      for (const model of candidateModels) {
+        try {
+          response = await ai.models.generateContent({
+            model: model,
+            contents: [
+              {
+                inlineData: {
+                  data: base64Data,
+                  mimeType: mimeType
+                }
+              },
+              prompt
+            ],
+            config: {
+              responseMimeType: "application/json"
+            }
+          });
+          if (response && response.text) break;
+        } catch (mErr: any) {
+          lastModelError = mErr;
+          console.warn(`Model ${model} failed, trying next fallback:`, mErr?.message || mErr);
+        }
       }
 
+      if (!response || !response.text) {
+        throw new Error(lastModelError?.message || "No response text from Gemini models.");
+      }
+
+      const resultText = response.text;
       const parsed = JSON.parse(resultText.trim());
       res.json(parsed);
 

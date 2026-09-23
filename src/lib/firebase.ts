@@ -20,9 +20,11 @@ import {
   getDocs,
   setDoc,
   deleteDoc,
+  onSnapshot,
   query,
   where,
-  orderBy
+  orderBy,
+  Unsubscribe
 } from 'firebase/firestore';
 
 // Configuration from Firebase Console
@@ -44,8 +46,13 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
-// Initialize default firestore database
-export const db = initializeFirestore(app, {});
+// Initialize default firestore database with undefined properties safety
+export const db = initializeFirestore(app, {
+  ignoreUndefinedProperties: true
+});
+
+export { onSnapshot };
+export type { Unsubscribe };
 
 // Connection test helper as mandated by firebase-integration skill
 export async function testFirestoreConnection(): Promise<boolean> {

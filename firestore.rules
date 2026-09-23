@@ -54,6 +54,12 @@ service cloud.firestore {
         allow create, update: if isOwner(userId) && isValidId(categoryId) && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100;
         allow delete: if isOwner(userId);
       }
+
+      match /removedHistory/{removedId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(removedId);
+        allow delete: if isOwner(userId);
+      }
     }
   }
 }

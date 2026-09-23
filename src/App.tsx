@@ -56,8 +56,21 @@ import {
   setDoc, 
   deleteDoc, 
   doc, 
-  getDoc 
+  getDoc,
+  onSnapshot,
+  Unsubscribe
 } from 'firebase/firestore';
+
+// Helper to sanitize Firestore document data and strip undefined properties
+function cleanDocData<T extends Record<string, any>>(obj: T): Partial<T> {
+  const clean: any = {};
+  for (const key of Object.keys(obj)) {
+    if (obj[key] !== undefined) {
+      clean[key] = obj[key];
+    }
+  }
+  return clean;
+}
 
 // Default Product Image provided in custom icon (served from /icons/default-product.png)
 export const DEFAULT_PRODUCT_IMAGE = '/icons/default-product.png';
@@ -247,201 +260,215 @@ export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // Helper to load offline local data
+  // Helper to load offline local data (for logged out / guest users)
   const loadLocalData = () => {
-    const storedProducts = localStorage.getItem('freshstamp_products');
-    const storedWasted = localStorage.getItem('freshstamp_wasted_history');
-    const storedSettings = localStorage.getItem('freshstamp_settings');
-
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
-    } else {
-      const initialProducts = getSeedProducts();
-      setProducts(initialProducts);
-      localStorage.setItem('freshstamp_products', JSON.stringify(initialProducts));
-    }
-
-    if (storedWasted) {
-      setWastedHistory(JSON.parse(storedWasted));
-    } else {
-      const initialWasted = getSeedWastedHistory();
-      setWastedHistory(initialWasted);
-      localStorage.setItem('freshstamp_wasted_history', JSON.stringify(initialWasted));
-    }
-
-    if (storedSettings) {
-      setSettings(JSON.parse(storedSettings));
-    } else {
-      const initialSettings = {
-        geminiApiKey: '',
-        defaultReminderDays: 3,
-        notificationsEnabled: true,
-        username: 'Alex Sterling',
-        userEmail: 'alex.sterling@freshstamp.io'
-      };
-      setSettings(initialSettings);
-      localStorage.setItem('freshstamp_settings', JSON.stringify(initialSettings));
-    }
-
-    const storedCategories = localStorage.getItem('freshstamp_categories');
-    if (storedCategories) {
-      setCustomCategories(JSON.parse(storedCategories));
-    } else {
-      setCustomCategories([]);
-      localStorage.setItem('freshstamp_categories', JSON.stringify([]));
-    }
-
-    const storedRemoved = localStorage.getItem('freshstamp_removed_history');
-    if (storedRemoved) {
-      setRemovedHistory(JSON.parse(storedRemoved));
-    } else {
-      setRemovedHistory([]);
-    }
-  };
-
-  // Helper to load cloud data from Firestore
-  const loadUserData = async (currentUser: FirebaseUser) => {
     try {
-      const uid = currentUser.uid;
+      const storedProducts = localStorage.getItem('freshstamp_products');
+      const storedWasted = localStorage.getItem('freshstamp_wasted_history');
+      const storedSettings = localStorage.getItem('freshstamp_settings');
+      const storedCategories = localStorage.getItem('freshstamp_categories');
+      const storedRemoved = localStorage.getItem('freshstamp_removed_history');
 
-      // 1. Fetch settings
-      const settingsRef = doc(db, 'users', uid, 'settings', 'current');
-      const settingsSnap = await getDoc(settingsRef);
-      
-      let userSettings: AppSettings;
-      if (settingsSnap.exists()) {
-        userSettings = settingsSnap.data() as AppSettings;
+      if (storedProducts) {
+        setProducts(JSON.parse(storedProducts));
       } else {
-        // Try user-specific local cache first
-        const cacheSettingsStr = localStorage.getItem(`freshstamp_settings_${uid}`);
-        if (cacheSettingsStr) {
-          userSettings = JSON.parse(cacheSettingsStr);
-        } else {
-          userSettings = {
-            geminiApiKey: '',
-            defaultReminderDays: 3,
-            notificationsEnabled: true,
-            username: currentUser.displayName || 'Alex Sterling',
-            userEmail: currentUser.email || 'alex.sterling@freshstamp.io'
-          };
-        }
-        await setDoc(settingsRef, userSettings);
-      }
-      setSettings(userSettings);
-      localStorage.setItem(`freshstamp_settings_${uid}`, JSON.stringify(userSettings));
-
-      // 2. Fetch products (Smart union merge to prevent local products from ever being overwritten)
-      const productsRef = collection(db, 'users', uid, 'products');
-      const productsSnap = await getDocs(productsRef);
-      
-      const cacheProductsStr = localStorage.getItem(`freshstamp_products_${uid}`);
-      let localProducts: Product[] = [];
-      if (cacheProductsStr) {
-        try {
-          localProducts = JSON.parse(cacheProductsStr) as Product[];
-        } catch (e) {}
+        const initialProducts = getSeedProducts();
+        setProducts(initialProducts);
+        localStorage.setItem('freshstamp_products', JSON.stringify(initialProducts));
       }
 
-      const productMap = new Map<string, Product>();
-      if (!productsSnap.empty) {
-        productsSnap.forEach(docSnap => {
-          const p = docSnap.data() as Product;
-          productMap.set(p.id, p);
-        });
-      }
-
-      // Preserve any locally added products that weren't in the cloud snapshot yet and sync them
-      localProducts.forEach(localProd => {
-        if (!productMap.has(localProd.id)) {
-          productMap.set(localProd.id, localProd);
-          setDoc(doc(db, 'users', uid, 'products', localProd.id), localProd)
-            .catch(err => console.warn('Background sync local product error:', err));
-        }
-      });
-
-      const userProducts = Array.from(productMap.values());
-      setProducts(userProducts);
-      localStorage.setItem(`freshstamp_products_${uid}`, JSON.stringify(userProducts));
-
-      // 3. Fetch wasted history
-      const wastedRef = collection(db, 'users', uid, 'wastedHistory');
-      const wastedSnap = await getDocs(wastedRef);
-      let userWasted: WastedItem[] = [];
-
-      if (!wastedSnap.empty) {
-        wastedSnap.forEach(docSnap => {
-          userWasted.push(docSnap.data() as WastedItem);
-        });
+      if (storedWasted) {
+        setWastedHistory(JSON.parse(storedWasted));
       } else {
-        // Check user-specific local cache first
-        const cacheWastedStr = localStorage.getItem(`freshstamp_wasted_history_${uid}`);
-        if (cacheWastedStr) {
-          userWasted = JSON.parse(cacheWastedStr) as WastedItem[];
-          for (const item of userWasted) {
-            await setDoc(doc(db, 'users', uid, 'wastedHistory', item.id), item);
-          }
-        } else {
-          // A brand new Google Account starts with a completely empty wasted history!
-          userWasted = [];
-        }
+        const initialWasted = getSeedWastedHistory();
+        setWastedHistory(initialWasted);
+        localStorage.setItem('freshstamp_wasted_history', JSON.stringify(initialWasted));
       }
-      userWasted.sort((a, b) => b.wastedDate.localeCompare(a.wastedDate));
-      setWastedHistory(userWasted);
-      localStorage.setItem(`freshstamp_wasted_history_${uid}`, JSON.stringify(userWasted));
 
-      // 4. Fetch custom categories
-      const categoriesRef = collection(db, 'users', uid, 'categories');
-      const categoriesSnap = await getDocs(categoriesRef);
-      let userCategories: string[] = [];
-
-      if (!categoriesSnap.empty) {
-        categoriesSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data && data.name) {
-            userCategories.push(data.name);
-          }
-        });
+      if (storedSettings) {
+        setSettings(JSON.parse(storedSettings));
       } else {
-        // Check user-specific local cache first
-        const cacheCategoriesStr = localStorage.getItem(`freshstamp_categories_${uid}`);
-        if (cacheCategoriesStr) {
-          userCategories = JSON.parse(cacheCategoriesStr) as string[];
-          for (const catName of userCategories) {
-            const catId = catName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            await setDoc(doc(db, 'users', uid, 'categories', catId), { id: catId, name: catName });
-          }
-        }
+        const initialSettings = {
+          geminiApiKey: '',
+          defaultReminderDays: 3,
+          notificationsEnabled: true,
+          username: 'Alex Sterling',
+          userEmail: 'alex.sterling@freshstamp.io'
+        };
+        setSettings(initialSettings);
+        localStorage.setItem('freshstamp_settings', JSON.stringify(initialSettings));
       }
-      setCustomCategories(userCategories);
-      localStorage.setItem(`freshstamp_categories_${uid}`, JSON.stringify(userCategories));
 
-    } catch (error: any) {
-      console.error("Error loading user data from Firestore:", error);
-      showToast("Error syncing with cloud storage. Working offline.", "error");
-      loadLocalData();
+      if (storedCategories) {
+        setCustomCategories(JSON.parse(storedCategories));
+      } else {
+        setCustomCategories([]);
+        localStorage.setItem('freshstamp_categories', JSON.stringify([]));
+      }
+
+      if (storedRemoved) {
+        setRemovedHistory(JSON.parse(storedRemoved));
+      } else {
+        setRemovedHistory([]);
+      }
+    } catch (e) {
+      console.warn('Error loading guest offline data:', e);
     }
   };
 
-  // Auth Subscription
+  // Real-Time Multi-Device Auth & Firestore Sync Subscription
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      // Clear current state immediately during auth transitions to avoid stale visual data/leak
-      setProducts([]);
-      setWastedHistory([]);
-      setRemovedHistory([]);
-      setCustomCategories([]);
-      
+    let unsubs: Unsubscribe[] = [];
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      // Clean up previous listeners when user changes or logs out
+      unsubs.forEach(unsub => unsub());
+      unsubs = [];
+
       setUser(currentUser);
       setLoadingAuth(true);
+
       if (currentUser) {
-        await loadUserData(currentUser);
+        const uid = currentUser.uid;
+
+        // 1. Immediately render cached data for instant UX without screen flicker
+        try {
+          const cacheSettings = localStorage.getItem(`freshstamp_settings_${uid}`);
+          if (cacheSettings) setSettings(JSON.parse(cacheSettings));
+
+          const cacheProducts = localStorage.getItem(`freshstamp_products_${uid}`);
+          if (cacheProducts) setProducts(JSON.parse(cacheProducts));
+
+          const cacheWasted = localStorage.getItem(`freshstamp_wasted_history_${uid}`);
+          if (cacheWasted) setWastedHistory(JSON.parse(cacheWasted));
+
+          const cacheRemoved = localStorage.getItem(`freshstamp_removed_history_${uid}`);
+          if (cacheRemoved) setRemovedHistory(JSON.parse(cacheRemoved));
+
+          const cacheCategories = localStorage.getItem(`freshstamp_categories_${uid}`);
+          if (cacheCategories) setCustomCategories(JSON.parse(cacheCategories));
+        } catch (e) {
+          console.warn('Error reading local user cache on auth:', e);
+        }
+
+        // 2. Ensure initial user settings document exists in Firestore
+        try {
+          const settingsRef = doc(db, 'users', uid, 'settings', 'current');
+          const settingsSnap = await getDoc(settingsRef);
+          if (!settingsSnap.exists()) {
+            const initialUserSettings: AppSettings = {
+              geminiApiKey: '',
+              defaultReminderDays: 3,
+              notificationsEnabled: true,
+              username: currentUser.displayName || 'Alex Sterling',
+              userEmail: currentUser.email || 'alex.sterling@freshstamp.io'
+            };
+            await setDoc(settingsRef, cleanDocData(initialUserSettings));
+            setSettings(initialUserSettings);
+            localStorage.setItem(`freshstamp_settings_${uid}`, JSON.stringify(initialUserSettings));
+          }
+        } catch (err) {
+          console.warn('Error ensuring user settings in Firestore:', err);
+        }
+
+        // 3. Connect real-time Firestore listeners for Live Cross-Device Sync
+        // Products listener: Authoritative cloud state. Deletions on mobile reflect instantly on laptop!
+        const unsubProducts = onSnapshot(collection(db, 'users', uid, 'products'), (snapshot) => {
+          const cloudProducts: Product[] = [];
+          snapshot.forEach((docSnap) => {
+            cloudProducts.push(docSnap.data() as Product);
+          });
+          setProducts(cloudProducts);
+          try {
+            localStorage.setItem(`freshstamp_products_${uid}`, JSON.stringify(cloudProducts));
+          } catch (e) {
+            console.warn('Cache write warning for products:', e);
+          }
+        }, (err) => {
+          console.warn('Real-time products sync error:', err);
+        });
+        unsubs.push(unsubProducts);
+
+        // Wasted history listener
+        const unsubWasted = onSnapshot(collection(db, 'users', uid, 'wastedHistory'), (snapshot) => {
+          const cloudWasted: WastedItem[] = [];
+          snapshot.forEach((docSnap) => {
+            cloudWasted.push(docSnap.data() as WastedItem);
+          });
+          cloudWasted.sort((a, b) => b.wastedDate.localeCompare(a.wastedDate));
+          setWastedHistory(cloudWasted);
+          try {
+            localStorage.setItem(`freshstamp_wasted_history_${uid}`, JSON.stringify(cloudWasted));
+          } catch (e) {}
+        }, (err) => {
+          console.warn('Real-time wasted history sync error:', err);
+        });
+        unsubs.push(unsubWasted);
+
+        // Removed history listener (for revoking/restoring removed items)
+        const unsubRemoved = onSnapshot(collection(db, 'users', uid, 'removedHistory'), (snapshot) => {
+          const cloudRemoved: RemovedItem[] = [];
+          snapshot.forEach((docSnap) => {
+            cloudRemoved.push(docSnap.data() as RemovedItem);
+          });
+          cloudRemoved.sort((a, b) => b.removedAt.localeCompare(a.removedAt));
+          setRemovedHistory(cloudRemoved);
+          try {
+            localStorage.setItem(`freshstamp_removed_history_${uid}`, JSON.stringify(cloudRemoved));
+          } catch (e) {}
+        }, (err) => {
+          console.warn('Real-time removed history sync error:', err);
+        });
+        unsubs.push(unsubRemoved);
+
+        // Custom categories listener
+        const unsubCategories = onSnapshot(collection(db, 'users', uid, 'categories'), (snapshot) => {
+          const cloudCategories: string[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data && data.name) {
+              cloudCategories.push(data.name);
+            }
+          });
+          setCustomCategories(cloudCategories);
+          try {
+            localStorage.setItem(`freshstamp_categories_${uid}`, JSON.stringify(cloudCategories));
+          } catch (e) {}
+        }, (err) => {
+          console.warn('Real-time categories sync error:', err);
+        });
+        unsubs.push(unsubCategories);
+
+        // Settings listener
+        const unsubSettings = onSnapshot(doc(db, 'users', uid, 'settings', 'current'), (docSnap) => {
+          if (docSnap.exists()) {
+            const cloudSettings = docSnap.data() as AppSettings;
+            setSettings(cloudSettings);
+            try {
+              localStorage.setItem(`freshstamp_settings_${uid}`, JSON.stringify(cloudSettings));
+            } catch (e) {}
+          }
+        }, (err) => {
+          console.warn('Real-time settings sync error:', err);
+        });
+        unsubs.push(unsubSettings);
+
       } else {
+        // Guest mode: clear and load local storage
+        setProducts([]);
+        setWastedHistory([]);
+        setRemovedHistory([]);
+        setCustomCategories([]);
         loadLocalData();
       }
+
       setLoadingAuth(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubs.forEach(unsub => unsub());
+      unsubscribeAuth();
+    };
   }, []);
 
   // Save changes to localStorage when updated (and cloud if logged in)
@@ -507,7 +534,7 @@ export default function App() {
     saveRemovedHistory(updatedRemoved);
 
     if (auth.currentUser) {
-      setDoc(doc(db, 'users', auth.currentUser.uid, 'products', restoredProduct.id), restoredProduct)
+      setDoc(doc(db, 'users', auth.currentUser.uid, 'products', restoredProduct.id), cleanDocData(restoredProduct))
         .catch(err => console.error("Cloud restore product error:", err));
       deleteDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', recordId))
         .catch(err => console.error("Cloud delete removed history error:", err));
@@ -516,9 +543,20 @@ export default function App() {
     showToast(`Restored "${restoredProduct.name}" back to shelf!`, 'success');
   };
 
-  const handleClearRemovedHistory = () => {
+  const handleClearRemovedHistory = async () => {
     if (confirm("Are you sure you want to clear the removed items archive?")) {
       saveRemovedHistory([]);
+      if (auth.currentUser) {
+        try {
+          const removedRef = collection(db, 'users', auth.currentUser.uid, 'removedHistory');
+          const snap = await getDocs(removedRef);
+          for (const docSnap of snap.docs) {
+            await deleteDoc(docSnap.ref);
+          }
+        } catch (err) {
+          console.error("Cloud clear removed history error:", err);
+        }
+      }
       showToast("Cleared removed items archive.", "info");
     }
   };
@@ -527,7 +565,7 @@ export default function App() {
     setSettings(updatedSettings);
     if (auth.currentUser) {
       localStorage.setItem(`freshstamp_settings_${auth.currentUser.uid}`, JSON.stringify(updatedSettings));
-      setDoc(doc(db, 'users', auth.currentUser.uid, 'settings', 'current'), updatedSettings)
+      setDoc(doc(db, 'users', auth.currentUser.uid, 'settings', 'current'), cleanDocData(updatedSettings))
         .catch(err => console.error("Cloud save settings error:", err));
     } else {
       localStorage.setItem('freshstamp_settings', JSON.stringify(updatedSettings));
@@ -723,7 +761,7 @@ export default function App() {
         if (auth.currentUser) {
           deleteDoc(doc(db, 'users', auth.currentUser.uid, 'products', id))
             .catch(err => console.error("Cloud delete product error:", err));
-          setDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', removedRecord.id), removedRecord)
+          setDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', removedRecord.id), cleanDocData(removedRecord))
             .catch(err => console.error("Cloud add removed record error:", err));
         }
       } else {
@@ -732,7 +770,7 @@ export default function App() {
         
         // Cloud update
         if (auth.currentUser) {
-          setDoc(doc(db, 'users', auth.currentUser.uid, 'products', id), updatedProduct)
+          setDoc(doc(db, 'users', auth.currentUser.uid, 'products', id), cleanDocData(updatedProduct))
             .catch(err => console.error("Cloud update product error:", err));
         }
       }
@@ -773,10 +811,10 @@ export default function App() {
         deleteDoc(doc(db, 'users', auth.currentUser.uid, 'products', id))
           .catch(err => console.error("Cloud delete product error:", err));
         // Add to wasted collection
-        setDoc(doc(db, 'users', auth.currentUser.uid, 'wastedHistory', newWasted.id), newWasted)
+        setDoc(doc(db, 'users', auth.currentUser.uid, 'wastedHistory', newWasted.id), cleanDocData(newWasted))
           .catch(err => console.error("Cloud add wasted item error:", err));
         // Add to removedHistory archive
-        setDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', removedRecord.id), removedRecord)
+        setDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', removedRecord.id), cleanDocData(removedRecord))
           .catch(err => console.error("Cloud add removed record error:", err));
       }
     }
@@ -888,7 +926,7 @@ export default function App() {
     if (auth.currentUser) {
       const updatedItem = updatedList.find(p => p.id === editingProduct.id);
       if (updatedItem) {
-        setDoc(doc(db, 'users', auth.currentUser.uid, 'products', updatedItem.id), updatedItem)
+        setDoc(doc(db, 'users', auth.currentUser.uid, 'products', updatedItem.id), cleanDocData(updatedItem))
           .catch(err => console.error("Cloud update product error:", err));
       }
     }
@@ -927,7 +965,7 @@ export default function App() {
     
     // Cloud add
     if (auth.currentUser) {
-      setDoc(doc(db, 'users', auth.currentUser.uid, 'products', newProduct.id), newProduct)
+      setDoc(doc(db, 'users', auth.currentUser.uid, 'products', newProduct.id), cleanDocData(newProduct))
         .catch(err => console.error("Cloud add product error:", err));
     }
     
@@ -1025,16 +1063,22 @@ export default function App() {
     setShowOcrSelector(false);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          triggerOcrScan(undefined, reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImage(file, 800, 0.78);
+        triggerOcrScan(undefined, compressedBase64);
+      } catch (err) {
+        console.warn('Canvas compression fallback in handleFileChange:', err);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') {
+            triggerOcrScan(undefined, reader.result);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -1086,6 +1130,8 @@ export default function App() {
     const backupData = {
       products,
       wastedHistory,
+      removedHistory,
+      customCategories,
       settings,
       exportedAt: new Date().toISOString()
     };
@@ -1113,7 +1159,7 @@ export default function App() {
             saveProducts(parsed.products);
             if (auth.currentUser) {
               for (const prod of parsed.products) {
-                await setDoc(doc(db, 'users', auth.currentUser.uid, 'products', prod.id), prod);
+                await setDoc(doc(db, 'users', auth.currentUser.uid, 'products', prod.id), cleanDocData(prod));
               }
             }
           }
@@ -1121,7 +1167,24 @@ export default function App() {
             saveWastedHistory(parsed.wastedHistory);
             if (auth.currentUser) {
               for (const item of parsed.wastedHistory) {
-                await setDoc(doc(db, 'users', auth.currentUser.uid, 'wastedHistory', item.id), item);
+                await setDoc(doc(db, 'users', auth.currentUser.uid, 'wastedHistory', item.id), cleanDocData(item));
+              }
+            }
+          }
+          if (parsed.removedHistory && Array.isArray(parsed.removedHistory)) {
+            saveRemovedHistory(parsed.removedHistory);
+            if (auth.currentUser) {
+              for (const item of parsed.removedHistory) {
+                await setDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', item.id), cleanDocData(item));
+              }
+            }
+          }
+          if (parsed.customCategories && Array.isArray(parsed.customCategories)) {
+            setCustomCategories(parsed.customCategories);
+            if (auth.currentUser) {
+              for (const catName of parsed.customCategories) {
+                const catId = catName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                await setDoc(doc(db, 'users', auth.currentUser.uid, 'categories', catId), { id: catId, name: catName });
               }
             }
           }
@@ -1129,7 +1192,7 @@ export default function App() {
             const updatedSettings = { ...settings, ...parsed.settings };
             saveSettings(updatedSettings);
             if (auth.currentUser) {
-              await setDoc(doc(db, 'users', auth.currentUser.uid, 'settings', 'current'), updatedSettings);
+              await setDoc(doc(db, 'users', auth.currentUser.uid, 'settings', 'current'), cleanDocData(updatedSettings));
             }
           }
           showToast('Backup restored successfully!', 'success');
@@ -1171,6 +1234,13 @@ export default function App() {
             await deleteDoc(docSnap.ref);
           }
 
+          // Delete removed history in cloud
+          const removedRef = collection(db, 'users', uid, 'removedHistory');
+          const removedSnap = await getDocs(removedRef);
+          for (const docSnap of removedSnap.docs) {
+            await deleteDoc(docSnap.ref);
+          }
+
           // Delete custom categories in cloud
           const categoriesRef = collection(db, 'users', uid, 'categories');
           const categoriesSnap = await getDocs(categoriesRef);
@@ -1179,18 +1249,18 @@ export default function App() {
           }
 
           // Reset settings in cloud
-          await setDoc(doc(db, 'users', uid, 'settings', 'current'), defaultSettings);
+          await setDoc(doc(db, 'users', uid, 'settings', 'current'), cleanDocData(defaultSettings));
 
           // Seed cloud products
           const initialProducts = getSeedProducts();
           for (const prod of initialProducts) {
-            await setDoc(doc(db, 'users', uid, 'products', prod.id), prod);
+            await setDoc(doc(db, 'users', uid, 'products', prod.id), cleanDocData(prod));
           }
 
           // Seed cloud wasted
           const initialWasted = getSeedWastedHistory();
           for (const item of initialWasted) {
-            await setDoc(doc(db, 'users', uid, 'wastedHistory', item.id), item);
+            await setDoc(doc(db, 'users', uid, 'wastedHistory', item.id), cleanDocData(item));
           }
 
         } catch (error: any) {
@@ -1202,6 +1272,7 @@ export default function App() {
       localStorage.clear();
       setProducts(getSeedProducts());
       setWastedHistory(getSeedWastedHistory());
+      setRemovedHistory([]);
       setCustomCategories([]);
       setSettings(defaultSettings);
       showToast('App data reset successfully.', 'info');

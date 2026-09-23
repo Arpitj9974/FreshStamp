@@ -1,4 +1,4 @@
-const CACHE_NAME = 'freshstamp-cache-v1.0.2';
+const CACHE_NAME = 'freshstamp-cache-v1.0.3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -9,7 +9,7 @@ const STATIC_ASSETS = [
   '/icons/logo-512.png',
   '/icons/logo-full.png',
   '/the main logo.png',
-  '/the default image of product.png',
+  '/default-product.png',
   '/favicon.png'
 ];
 
