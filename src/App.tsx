@@ -517,9 +517,11 @@ export default function App() {
     const record = removedHistory.find(r => r.id === recordId);
     if (!record) return;
 
+    // Guaranteed unique ID avoids collisions when revoking multiple items of the same product
+    const uniqueRestoredId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const restoredProduct: Product = {
       ...record.originalProduct,
-      id: record.originalProduct.id || `prod-${Date.now()}`,
+      id: uniqueRestoredId,
       quantity: Math.max(1, record.originalProduct.quantity || 1),
       isUsed: false,
       isWasted: false,
@@ -535,9 +537,15 @@ export default function App() {
 
     if (auth.currentUser) {
       setDoc(doc(db, 'users', auth.currentUser.uid, 'products', restoredProduct.id), cleanDocData(restoredProduct))
-        .catch(err => console.error("Cloud restore product error:", err));
+        .catch(err => {
+          console.error("Cloud restore product error:", err);
+          showToast("Cloud sync error restoring product.", "error");
+        });
       deleteDoc(doc(db, 'users', auth.currentUser.uid, 'removedHistory', recordId))
-        .catch(err => console.error("Cloud delete removed history error:", err));
+        .catch(err => {
+          console.error("Cloud delete removed history error:", err);
+          showToast("Cloud sync error updating archive.", "error");
+        });
     }
 
     showToast(`Restored "${restoredProduct.name}" back to shelf!`, 'success');
@@ -1380,7 +1388,7 @@ export default function App() {
                 {/* Logo with Optical Laser Scanner Line */}
                 <div className="relative overflow-hidden py-1 px-2">
                   <motion.img
-                    src="/logo-with-freshstamp-name.png?v=1.0.3"
+                    src="/logo-with-freshstamp-name.png?v=1.0.4"
                     alt="FreshStamp"
                     initial={{ scale: 0.88, opacity: 0, y: 14 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -2616,10 +2624,10 @@ export default function App() {
                       return (
                         <div 
                           key={item.id}
-                          className="flex items-center justify-between p-3 rounded-xl border border-[#eae8e5] bg-[#fdfdfc] hover:bg-white transition-all shadow-xs gap-3"
+                          className="flex items-center justify-between p-3 rounded-xl border border-[#eae8e5] bg-[#fdfdfc] hover:bg-white transition-all shadow-xs gap-2.5"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-11 h-11 rounded-lg overflow-hidden border border-[#eae8e5] bg-[#f0eeea] shrink-0">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden border border-[#eae8e5] bg-[#f0eeea] shrink-0">
                               <img 
                                 src={img} 
                                 alt={orig.name} 
@@ -2627,15 +2635,15 @@ export default function App() {
                                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE; }}
                               />
                             </div>
-                            <div className="min-w-0">
-                              <h4 className="font-space font-bold text-xs text-[#0e1b0c] truncate">{orig.name}</h4>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-space font-bold text-xs text-[#0e1b0c] truncate" title={orig.name}>{orig.name}</h4>
+                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
                                   isConsumed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
                                 }`}>
                                   {isConsumed ? 'Consumed' : 'Discarded'}
                                 </span>
-                                <span className="text-[10px] text-[#747871] font-mono">
+                                <span className="text-[10px] text-[#747871] font-mono whitespace-nowrap">
                                   EXP: {formatDateToReadable(orig.expiryDate)}
                                 </span>
                               </div>
@@ -2645,11 +2653,11 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => handleRevokeProduct(item.id)}
-                            className="px-3 py-1.5 bg-[#22301f] text-white hover:bg-opacity-90 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
-                            title="Restore this item to Tracked Products"
+                            className="px-2.5 py-1.5 bg-[#22301f] text-white hover:bg-opacity-90 rounded-lg text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer whitespace-nowrap"
+                            title="Restore this item back to your active shelf"
                           >
-                            <RotateCcw size={12} />
-                            <span>Revoke / Restore</span>
+                            <RotateCcw size={11} className="text-[#8cd19b]" />
+                            <span>Revoke</span>
                           </button>
                         </div>
                       );

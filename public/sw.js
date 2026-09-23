@@ -1,4 +1,4 @@
-const CACHE_NAME = 'freshstamp-cache-v1.0.3';
+const CACHE_NAME = 'freshstamp-cache-v1.0.4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -40,11 +40,30 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests and skip chrome-extension or API calls
+  // Only handle GET requests
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Network-first for API requests, Cache-first / Stale-while-revalidate for static assets
+  // Skip cross-origin requests (Firebase, Google Auth, external images)
+  if (url.origin !== self.location.origin) return;
+
+  // 1. Navigation requests (HTML pages): Network-first with offline fallback so mobile PWAs always run the latest code
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then(res => res || caches.match('/index.html') || caches.match('/')))
+    );
+    return;
+  }
+
+  // 2. API requests: Network-first
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
@@ -52,15 +71,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // 3. Static assets: Stale-while-revalidate / Cache-first
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Return cached and update in background
         fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse);
-            });
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
           }
         }).catch(() => {});
         return cachedResponse;
@@ -72,13 +89,9 @@ self.addEventListener('fetch', (event) => {
         }
 
         const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         return networkResponse;
       }).catch(() => {
-        // Fallback for navigation requests
         if (event.request.mode === 'navigate') {
           return caches.match('/');
         }
