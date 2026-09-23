@@ -210,7 +210,7 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 1300);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -1142,57 +1142,66 @@ export default function App() {
       </AnimatePresence>
 
       {/* App Opening / Launch Animated Splash Screen */}
+      {/* App Opening / Launch Animated Splash Screen: Optical Laser Scan & Fresh Stamp */}
       <AnimatePresence>
         {showSplash && (
           <motion.div
             key="app-launch-splash"
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.03, filter: 'blur(4px)' }}
-            transition={{ duration: 0.45, ease: 'easeInOut' }}
+            exit={{ opacity: 0, y: -20, filter: 'blur(5px)' }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[9999] bg-[#fbf9f6] flex flex-col items-center justify-center select-none px-6"
           >
             <div className="relative flex flex-col items-center max-w-sm w-full">
-              {/* Soft ambient green glow */}
-              <div className="absolute w-64 h-64 bg-[#3E9B4F]/10 rounded-full blur-3xl pointer-events-none -top-8" />
+              {/* Soft ambient emerald radial glow */}
+              <motion.div 
+                animate={{ scale: [0.85, 1.1, 0.95], opacity: [0.35, 0.6, 0.4] }} 
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }} 
+                className="absolute w-72 h-72 bg-[#3E9B4F]/15 rounded-full blur-3xl pointer-events-none" 
+              />
 
-              <motion.div
-                initial={{ scale: 0.92, opacity: 0, y: 10 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="relative z-10 flex flex-col items-center w-full"
-              >
-                {/* Full Brand Logo with FreshStamp Name */}
-                <motion.img
-                  src="/logo-with-freshstamp-name.png?v=1.0.1"
-                  alt="FreshStamp"
-                  className="w-[280px] max-w-[80vw] h-auto object-contain drop-shadow-sm"
-                  animate={{ scale: [1, 1.02, 1] }}
-                  transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = '/icons/logo-full.png';
-                  }}
-                />
+              <div className="relative z-10 flex flex-col items-center w-full">
+                {/* Logo with Optical Laser Scanner Line */}
+                <div className="relative overflow-hidden py-1 px-2">
+                  <motion.img
+                    src="/logo-with-freshstamp-name.png?v=1.0.2"
+                    alt="FreshStamp"
+                    initial={{ scale: 0.88, opacity: 0, y: 14 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-[285px] max-w-[82vw] h-auto object-contain drop-shadow-sm"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/icons/logo-full.png';
+                    }}
+                  />
 
-                {/* Minimalist animated progress bar */}
-                <div className="w-36 h-1 bg-[#22301f]/10 rounded-full overflow-hidden mt-6">
+                  {/* Optical Laser Scan Sweep (AI Expiry Scanning Effect) */}
                   <motion.div
-                    className="h-full bg-[#3E9B4F] rounded-full"
-                    initial={{ width: '0%' }}
-                    animate={{ width: '100%' }}
-                    transition={{ duration: 1.15, ease: 'easeInOut' }}
+                    initial={{ top: '-10%', opacity: 0 }}
+                    animate={{ 
+                      top: ['-10%', '110%'],
+                      opacity: [0, 1, 1, 0]
+                    }}
+                    transition={{ 
+                      duration: 0.75, 
+                      ease: 'easeInOut',
+                      delay: 0.15
+                    }}
+                    className="absolute left-0 right-0 h-[2.5px] bg-gradient-to-r from-transparent via-[#3E9B4F] to-transparent shadow-[0_0_14px_#3E9B4F] pointer-events-none"
                   />
                 </div>
 
-                {/* Tagline */}
-                <motion.p
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25, duration: 0.4 }}
-                  className="text-[11px] text-[#546250] font-space font-medium tracking-wide mt-3.5 text-center"
+                {/* Monospace Clinical Stamp Badge */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.75, rotate: -6 }}
+                  animate={{ opacity: 1, scale: 1, rotate: -1.5 }}
+                  transition={{ delay: 0.4, duration: 0.28, type: 'spring', stiffness: 350, damping: 22 }}
+                  className="mt-5 flex items-center gap-2 px-3.5 py-1 border-[1.5px] border-[#3E9B4F] text-[#3E9B4F] font-mono text-[10px] font-bold tracking-widest bg-white/90 backdrop-blur-xs rounded-xs shadow-xs"
                 >
-                  Smart Expiry Tracking & Waste Minimization
-                </motion.p>
-              </motion.div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#3E9B4F] animate-pulse"></span>
+                  <span>SYSTEM READY · SMART EXPIRY</span>
+                </motion.div>
+              </div>
             </div>
           </motion.div>
         )}
